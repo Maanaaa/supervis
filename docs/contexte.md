@@ -106,8 +106,17 @@ Pour garantir la continuité de service et respecter ses engagements de disponib
   - Formalisation de cette décision d'architecture dans **l'ADR-0007**.
 
 ### 2026-10-12 — Étape 8 : Décision de différer l'initialisation du code et de la CI
-- **Arbitrage de l'utilisateur :** Report de l'initialisation du projet applicatif et de la CI à plus tard.
-- **Priorité actuelle :** Rester concentré sur la base documentaire, le cadrage conceptuel, les jeux de données de test et la maquette/IHM avant toute production de code.
+- **Arbitrage de l'utilisateur :** Report temporaire de l'initialisation du projet applicatif et de la CI.
+
+### 2026-10-12 — Étape 9 : Traitement complet du Ticket #1 (Next.js, Socket.IO, Tests & CI)
+- **Validation du plan d'action :** Plan d'action validé pour le traitement méthodique du ticket #1.
+- **Réalisation technique :**
+  - Initialisation de `app/` avec Next.js 14, React 18, TypeScript strict, Socket.IO et Mongoose.
+  - Implémentation du serveur custom `app/server.js` (unification HTTP + Socket.IO sur le port 3000).
+  - Création du singleton `app/src/lib/socket.ts` (`getIO()` / `setIO()`).
+  - Implémentation de la suite de tests automatisée (Unitaires, Fonctionnels, E2E WebSockets) exécutée avec Jest et ts-jest.
+  - Mise en place du workflow CI GitHub Actions (`.github/workflows/ci.yml`).
+  - Validation déterministe en local (Typecheck, Lint, Format, Tests, Build : 100% au vert).
 
 ---
 
