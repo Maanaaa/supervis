@@ -165,3 +165,17 @@ Un petit hébergeur gère un parc de serveurs (machines physiques, VPS, conteneu
 | 2026-10-12 | **Clarification & Incompréhension : "Plus tard"** | L'IA avait interprété "plus tard" comme une V1 sans MongoDB/Socket.io puis une V2. L'utilisateur a clarifié : "plus tard" signifiait après le cadrage. **Décision : Stack complète unifiée (Node.js + MongoDB + Socket.io) développée en un seul bloc après validation du cadrage.** |
 | 2026-10-12 | Validation de la stack complète | Node.js, Express, Socket.IO, MongoDB (Mongoose), Frontend Vanilla (CSS monitoring moderne). |
 | 2026-10-12 | Conception des modèles et flux | Modélisation des collections `servers` et `alerts`, cycle `OPEN` -> `ACK` -> `RESOLVED`, et contrats d'API/Socket. |
+| 2026-10-12 | Structuration en ADRs (`docs/adr/`) | Adoption du format Architecture Decision Records pour figer les choix d'architecture (ADR-0001 à 0005). |
+| 2026-10-12 | Séparation racine `docs/` et `app/` | Isolation de la documentation dans `docs/` et du code applicatif dans `app/`. |
+| 2026-10-12 | Réserves utilisateur sur visuel/tech | L'utilisateur indique que des détails visuels et définitions techniques doivent être ajustés avant développement. |
+
+---
+
+## 8. Index des ADRs (Architecture Decision Records)
+Les fiches de décisions détaillées sont accessibles dans le répertoire [`docs/adr/`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/docs/adr/README.md) :
+- [ADR-0001 : Choix de la stack technique unifiée (Node.js + MongoDB + Socket.IO)](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/docs/adr/0001-stack-technique-unifiee.md)
+- [ADR-0002 : Ingestion hybride des alertes : Push + Pull](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/docs/adr/0002-ingestion-alertes-push-pull.md)
+- [ADR-0003 : Cycle de vie des alertes d'astreinte (OPEN ➔ ACK ➔ RESOLVED)](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/docs/adr/0003-cycle-de-vie-astreinte.md)
+- [ADR-0004 : Identification des membres d'astreinte](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/docs/adr/0004-gestion-operateurs-astreinte.md)
+- [ADR-0005 : Communication temps réel via Socket.IO](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/docs/adr/0005-communication-temps-reel-socketio.md)
+
