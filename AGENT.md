@@ -12,7 +12,14 @@ Avant toute proposition ou modification de code, l'IA doit consulter :
 
 ---
 
-## 2. Règles Fondamentales & Ce qu'il NE FAUT PAS faire
+## 2. Règles Fondamentales & Workflow de Travail
+
+### 📋 Gestion de Projet & Kanban GitHub
+- **L'IA est responsable du pilotage des tickets :**
+  - Elle crée ses propres tickets GitHub (`gh issue create`) avec descriptions détaillées et critères d'acceptation.
+  - Elle alimente, documente l'avancement et clôture les tickets au fur et à mesure de l'implémentation (`gh issue close #X`).
+- **Rôle de l'humain (Théo) :**
+  - Supervise le Kanban GitHub, relit les tickets, audite les commits et pushs pour vérifier l'alignement avec les attendus.
 
 ### ⚠️ Règle d'or des ADRs (Immuabilité)
 - **Ne JAMAIS réécrire ou modifier une décision dans une ADR déjà acceptée.**

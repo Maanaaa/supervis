@@ -88,16 +88,19 @@ Pour garantir la continuité de service et respecter ses engagements de disponib
 - **Gestion des serveurs & Sonde :**
   - Ajout via formulaire dashboard uniquement, fiche serveur avec historique complet des tickets liés.
   - **Sonde séquentielle :** cycle toutes les 5 minutes, test pas-à-pas serveur par serveur, alerte critique immédiate dès le premier échec (sans attendre la fin du cycle global).
-- **Gestion de projet GitHub :** Création des 6 issues détaillées pour piloter l'implémentation :
-  - **#1 :** `feat(core): Initialisation Next.js TypeScript & Custom Server Socket.IO`
-  - **#2 :** `feat(db): Modèles NoSQL MongoDB (Mongoose) & Connexion Singleton`
-  - **#3 :** `feat(poller): Moteur de Sonde Séquentielle (Cycle 5 min)`
-  - **#4 :** `feat(api): Route Handlers REST & Verrouillage Atomique Sub-milliseconde`
-  - **#5 :** `feat(ui): Dashboard d'Astreinte Temps Réel (React App Router & WebSockets)`
-  - **#6 :** `feat(demo): Simulateur de Pannes & Outil de Validation`
+- **Gestion de projet GitHub & Workflow Collaboratif :**
+  - **L'IA** prend en charge la création des tickets (`gh issue create`), leur alimentation, l'avancement technique et leur clôture au fil du développement.
+  - **L'utilisateur (Théo)** pilote le Kanban, relit les tickets, audite les commits et valide les pushs pour vérifier la stricte adéquation aux attendus.
+  - 6 issues initiales créées et actives :
+    - **#1 :** `feat(core): Initialisation Next.js TypeScript & Custom Server Socket.IO`
+    - **#2 :** `feat(db): Modèles NoSQL MongoDB (Mongoose) & Connexion Singleton`
+    - **#3 :** `feat(poller): Moteur de Sonde Séquentielle (Cycle 5 min)`
+    - **#4 :** `feat(api): Route Handlers REST & Verrouillage Atomique Sub-milliseconde`
+    - **#5 :** `feat(ui): Dashboard d'Astreinte Temps Réel (React App Router & WebSockets)`
+    - **#6 :** `feat(demo): Simulateur de Pannes & Outil de Validation`
 
 ---
 
 ## 4. Points en Cours d'Affinage
+- **Données de tests :** Cadrage des jeux d'essai pour les serveurs et les typologies d'alertes à simuler.
 - **Partie visuelle du Dashboard :** Remarques et ajustements attendus de l'utilisateur sur la mise en page et les composants IHM.
-- **Définitions techniques :** Affinage des détails d'implémentation avant le lancement du code.
