@@ -35,5 +35,29 @@ app.prepare().then(() => {
   server.listen(port, () => {
     console.log(`> Serveur de supervision prêt sur http://${hostname}:${port}`);
     console.log(`> Environnement : ${dev ? 'Développement' : 'Production'}`);
+
+    // Démarrage de la sonde périodique de surveillance (cycle 5 minutes)
+    const POLLER_INTERVAL_MS = parseInt(process.env.POLLER_INTERVAL_MS || '300000', 10);
+
+    const initPoller = async () => {
+      try {
+        const { startPoller } = await import('./src/lib/poller.ts');
+        startPoller(POLLER_INTERVAL_MS);
+        console.log(`> Sonde de surveillance démarrée (Cycle : ${POLLER_INTERVAL_MS / 1000}s)`);
+      } catch {
+        // Fallback via déclenchement HTTP interne sur l'API Next.js
+        console.log(`> Sonde de surveillance initialisée via endpoint interne (Cycle : ${POLLER_INTERVAL_MS / 1000}s)`);
+        const pollerTimer = setInterval(async () => {
+          try {
+            await fetch(`http://${hostname}:${port}/api/poller`, { method: 'POST' });
+          } catch {
+            // Ignorer si le serveur est en cours de redémarrage
+          }
+        }, POLLER_INTERVAL_MS);
+        if (pollerTimer.unref) pollerTimer.unref();
+      }
+    };
+
+    initPoller();
   });
 });

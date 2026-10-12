@@ -118,6 +118,21 @@ Pour garantir la continuité de service et respecter ses engagements de disponib
   - Mise en place du workflow CI GitHub Actions (`.github/workflows/ci.yml`).
   - Validation déterministe en local (Typecheck, Lint, Format, Tests, Build : 100% au vert).
 
+### 2026-10-12 — Étape 10 : Traitement complet du Ticket #2 (Modèles MongoDB Mongoose & Connexion Singleton)
+- **Réalisation technique :**
+  - Singleton de connexion Mongoose (`src/lib/db.ts`) avec cache pour Next.js (`global.mongooseCache`).
+  - Schémas et modèles stricts : `Server` (statut, latence, healthUrl), `Alert` (sévérité, statut OPEN/ACK/RESOLVED, assignation, transfert), `User` (annuaire techniciens d'astreinte, garde active).
+  - 17 tests unitaires et d'intégration validés avec MongoDB en mémoire.
+
+### 2026-10-12 — Étape 11 : Traitement complet du Ticket #3 (Sonde Séquentielle & Alerting Immédiat)
+- **Réalisation technique :**
+  - Implémentation du moteur de sonde séquentielle dans `src/lib/poller.ts` avec cycle récurrent de 5 minutes (300 000 ms).
+  - Parcours pas-à-pas des serveurs enregistrés avec timeout HTTP strict de 3 000 ms (`AbortController`).
+  - Calcul précis de la latence (`latencyMs`), mise à jour atomique de l'état serveur et émission Socket.IO `server:status_change`.
+  - Déclenchement d'alerte `CRITICAL` immédiate dès le premier échec (sans attendre la fin du cycle), enregistrement en BDD et notification instantanée `alert:new`.
+  - Intégration en tâche de fond dans `server.js` et exposition d'un endpoint `POST /api/poller` pour déclenchement programmatique / simulation.
+  - Suite de tests complète (unitaires, intégration, fonctionnels) validant 34 tests au vert.
+
 ---
 
 ## 4. Points en Cours d'Affinage
