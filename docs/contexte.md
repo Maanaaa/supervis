@@ -105,6 +105,10 @@ Pour garantir la continuité de service et respecter ses engagements de disponib
   - Adoption native de `AGENTS.md` et création du dossier `.agents/rules/` (`code-quality.md`, `testing-standards.md`).
   - Formalisation de cette décision d'architecture dans **l'ADR-0007**.
 
+### 2026-10-12 — Étape 8 : Décision de différer l'initialisation du code et de la CI
+- **Arbitrage de l'utilisateur :** Report de l'initialisation du projet applicatif et de la CI à plus tard.
+- **Priorité actuelle :** Rester concentré sur la base documentaire, le cadrage conceptuel, les jeux de données de test et la maquette/IHM avant toute production de code.
+
 ---
 
 ## 4. Points en Cours d'Affinage
