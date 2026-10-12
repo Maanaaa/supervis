@@ -83,3 +83,4 @@ Une alerte passe par trois états :
 | 2026-10-12 | Création de la branche `dev` | Isoler le développement actif de la branche `main`. |
 | 2026-10-12 | Initialisation de la base de connaissance | Formaliser les attentes, documenter le cycle de vie de l'astreinte et définir la stack. |
 | 2026-10-12 | Choix de la phase 1 sans BDD | Valider le modèle métier et l'IHM avec persistance simple en fichiers JSON avant d'ajouter MongoDB. |
+| 2026-10-12 | Réflexion sur Socket.io | Arbitrage entre auto-refresh (polling) temporaire vs intégrer Socket.io dès la phase 1 pour éviter de jeter du code. |
