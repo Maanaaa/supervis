@@ -78,14 +78,16 @@ Pour garantir la continuité de service et respecter ses engagements de disponib
 
 ### 2026-10-12 — Étape 6 : Adoption de Next.js et concurrence stricte à la milliseconde
 - **Stack :** Choix de **Next.js** en **TypeScript** avec App Router — création de l'**ADR-0006 amendant l'ADR-0001**.
-- **Serveur unifié :** Fichier `server.js` (serveur HTTP Node.js custom) unifiant Next.js et Socket.IO sur le même port.
+- **Serveur unifié :** Fichier `server.js` (serveur HTTP Node.js custom) unifiant Next.js et Socket.IO sur le même port via un singleton `lib/socket.ts`.
 - **Concurrence & UI :**
   - Pas de popup bloquante : mise à jour silencieuse et instantanée dans la liste lors d'une prise de ticket.
   - Verrouillage atomique MongoDB (`findOneAndUpdate` conditionnel).
   - Vol de ticket interdit, mais délégation/transfert possible par le titulaire en cours.
+  - Actions gérées en **Option A (REST PATCH + Broadcast Socket.IO)**.
 - **Workflow de clôture :** Champ de commentaire de résolution non obligatoire, bascule automatique vers un **onglet Historique** dédié.
-- **Gestion des serveurs :** Ajout via formulaire dashboard uniquement, fiche serveur avec historique complet des tickets liés.
-- **Conventions React :** Priorité aux Server Components (RSC), Client Components (`'use client'`) strictement réservés aux flux WebSockets et formulaires interactifs.
+- **Gestion des serveurs & Sonde :**
+  - Ajout via formulaire dashboard uniquement, fiche serveur avec historique complet des tickets liés.
+  - **Sonde séquentielle :** cycle toutes les 5 minutes, test pas-à-pas serveur par serveur, alerte critique immédiate dès le premier échec (sans attendre la fin du cycle global).
 
 ---
 
