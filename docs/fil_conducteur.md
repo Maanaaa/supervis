@@ -58,6 +58,14 @@ Ce document retrace la démarche de conception, l'historique des prises de déci
   - `docs/adr/` : Fiches de décision immuables.
   - `app/` : Répertoire applicatif dédié.
 
+### 2026-10-12 — Étape 5 : AGENT.md comme boussole et point d'ancrage unique de l'IA
+- **Réflexion de l'utilisateur :** Plutôt que de garder un document abstrait nommé "base de connaissance", c'est `AGENT.md` qui devient le point d'entrée unique et obligatoire.
+- **Principe établi :** À chaque session, l'IA lit `AGENT.md`. Grâce à ce manifeste, elle sait exactement :
+  - Où est le contexte (`docs/contexte.md`).
+  - Quels sont les choix tranchés et ce qu'il ne faut PAS faire (`docs/adr/`).
+  - Quelle est la trajectoire de pensée (`docs/fil_conducteur.md`).
+  - Comment implémenter sans régresser.
+
 ---
 
 ## 3. Points en Cours d'Affinage
