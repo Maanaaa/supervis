@@ -26,10 +26,10 @@ Avant toute proposition ou modification de code, l'IA doit consulter :
   - Tout ce qui concerne le code applicatif va dans `app/`.
 
 ### ⚠️ Architecture & Code
-- **Stack :** Next.js (React / App Router dans `app/`), MongoDB (Mongoose), Socket.IO.
-- Ne pas introduire de code "jetable" (la stack complète Next.js + MongoDB + Socket.IO sera développée directement).
-- Concurrence stricte : toute prise de ticket doit être atomique au niveau BDD (`findOneAndUpdate` conditionnel) pour empêcher les doubles attributions.
-- Ne pas rajouter de complexité inutile non décidée dans les ADRs (ex: pas d'authentification par mot de passe lourde sans validation).
+- **Stack :** Next.js 14+ (App Router en TypeScript dans `app/`), MongoDB (Mongoose), Socket.IO (via serveur custom `server.js`).
+- **Composants :** Favoriser les Server Components (RSC) pour le rendu initial et le layout ; réserver `'use client'` aux hooks Socket.IO et aux formulaires interactifs.
+- **Organisation :** Structure modulaire stricte dans `app/src/` (`components/`, `hooks/`, `lib/`, `models/`, `types/`).
+- **Concurrence atomique :** Utiliser exclusivement des requêtes conditionnelles MongoDB (`findOneAndUpdate({ _id, status: 'OPEN' }, ...)`) pour la prise de ticket à la milliseconde sans popup.
 
 ---
 

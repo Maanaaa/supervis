@@ -77,9 +77,15 @@ Pour garantir la continuité de service et respecter ses engagements de disponib
 - **Réduction de la charge :** Simulateur intégré pour tester les pannes en 1 clic sans vrais serveurs externes.
 
 ### 2026-10-12 — Étape 6 : Adoption de Next.js et concurrence stricte à la milliseconde
-- **Stack :** Choix de **Next.js** pour la stack fullstack (React, App Router, composants modernes) — création de l'**ADR-0006 amendant l'ADR-0001**.
-- **Exigence temps réel & concurrence :** Prise de tickets **à la milliseconde** pour éliminer tout risque de double prise en charge (verrou optimiste atomique MongoDB `findOneAndUpdate` + broadcast Socket.IO immédiat).
-- **Gestion de projet :** Utilisation de GitHub CLI (`gh`) pour structurer les tickets / issues GitHub du projet.
+- **Stack :** Choix de **Next.js** en **TypeScript** avec App Router — création de l'**ADR-0006 amendant l'ADR-0001**.
+- **Serveur unifié :** Fichier `server.js` (serveur HTTP Node.js custom) unifiant Next.js et Socket.IO sur le même port.
+- **Concurrence & UI :**
+  - Pas de popup bloquante : mise à jour silencieuse et instantanée dans la liste lors d'une prise de ticket.
+  - Verrouillage atomique MongoDB (`findOneAndUpdate` conditionnel).
+  - Vol de ticket interdit, mais délégation/transfert possible par le titulaire en cours.
+- **Workflow de clôture :** Champ de commentaire de résolution non obligatoire, bascule automatique vers un **onglet Historique** dédié.
+- **Gestion des serveurs :** Ajout via formulaire dashboard uniquement, fiche serveur avec historique complet des tickets liés.
+- **Conventions React :** Priorité aux Server Components (RSC), Client Components (`'use client'`) strictement réservés aux flux WebSockets et formulaires interactifs.
 
 ---
 
