@@ -2,7 +2,17 @@
 
 Ce répertoire consigne l'ensemble des décisions d'architecture et de conception prises pour le projet de supervision d'alertes.
 
-Chaque décision suit le formalisme standard (Date, Statut, Contexte, Décision, Alternatives, Conséquences).
+---
+
+## Règle Fondamentale de Gestion des ADRs
+
+> **Principe d'immuabilité :**  
+> Une fiche ADR acceptée est **figée dans le temps**. On ne modifie jamais son contenu historique pour changer une décision.  
+> **Quand on veut itérer ou faire évoluer une décision, on amende avec un nouvel ADR.**  
+> - Le nouvel ADR mentionne : `Amende ADR-XXXX` ou `Remplace ADR-XXXX`.  
+> - L'ancien ADR voit son statut mis à jour vers `Amendé par ADR-YYYY` ou `Remplacé par ADR-YYYY`.
+
+---
 
 ## Index des Décisions
 
