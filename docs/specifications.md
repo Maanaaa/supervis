@@ -6,24 +6,53 @@ Ce document décrit l'architecture technique, les schémas de données NoSQL, le
 
 ## 1. Architecture Système
 
+![Architecture Système](assets/architecture.svg)
+
+<details>
+<summary>📐 Voir le diagramme sous format textuel (Mermaid)</summary>
+
+```mermaid
+flowchart TD
+    subgraph Sources["Sources d'Alertes & Parc Informatique"]
+        Agent["🖥️ Agents / Serveurs Distants<br/>(Pannes internes, CPU, Disque)"]
+        Parc["🌐 Serveurs Surveillés<br/>(Disponibilité réseau)"]
+    end
+
+    subgraph Backend["Serveur Backend Node.js"]
+        API["📡 API Express (POST /api/alerts)"]
+        Poller["⏱️ Sonde Périodique (Promise.allSettled)"]
+        SocketHub["⚡ Hub Événements Socket.IO"]
+    end
+
+    subgraph Database["Base NoSQL MongoDB"]
+        MServers[("📁 servers")]
+        MAlerts[("📁 alerts")]
+        MUsers[("📁 users")]
+    end
+
+    subgraph Frontend["Dashboard Astreinte (Web)"]
+        UI_Alerts["🚨 Urgences Actives (OPEN)"]
+        UI_ACK["👤 Prise en charge (ACK)"]
+        UI_Resolve["⏱️ Clôture (RESOLVED)"]
+    end
+
+    %% Flux Push & Pull
+    Agent -->|POST /api/alerts (Push)| API
+    Poller -.->|Healthcheck périodique (Pull)| Parc
+    Parc -.->|Réponse / Timeout| Poller
+
+    %% Flux Backend & DB
+    API --> MAlerts
+    Poller --> MServers
+    Poller -->|Création alerte si DOWN| MAlerts
+
+    %% Flux Temps Réel
+    API -->|alert:new| SocketHub
+    Poller -->|server:status_change| SocketHub
+    SocketHub <==>|WebSockets bidirectionnels| Frontend
 ```
- ┌────────────────┐          POST /api/alerts (Push)
- │ Serveurs /     ├─────────────────────────────────────────┐
- │ Scripts d'agent│                                         │
- └────────────────┘                                         ▼
-                                                   ┌─────────────────┐
- ┌────────────────┐         Healthcheck (Pull)     │ Serveur Node.js │ <──> [ MongoDB ]
- │ Serveurs       │ < - - - - - - - - - - - - - -  │   + Express     │      (Collections:
- │ Surveillés     │                                │   + Socket.io   │       servers, alerts,
- └────────────────┘                                └────────┬────────┘       users)
-                                                            │
-                                         Socket.io (Events) │ (alert:new, alert:updated)
-                                                            ▼
-                                                   ┌─────────────────┐
-                                                   │ Dashboard Web   │
-                                                   │ Astreinte       │
-                                                   └─────────────────┘
-```
+
+</details>
 
 ---
 
