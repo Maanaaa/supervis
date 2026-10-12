@@ -5,9 +5,10 @@ Ce fichier doit être lu par l'IA au début de chaque session de travail sur ce 
 ---
 
 ## 1. Contexte du Projet
-- **Projet** : Tableau de bord de supervision d'alertes pour un petit hébergeur (SAE S5).
-- **Objectif** : Recevoir/sonder les alertes serveurs, permettre à l'astreinte de s'assigner les incidents et marquer leur résolution avec horodatage.
+- **Projet** : Tableau de bord de supervision d'alertes pour un petit hébergeur (SAE S5 Développement & IA).
+- **Objectif** : Recevoir/sonder les alertes serveurs, permettre à l'astreinte de s'assigner les incidents (*« Qui s'en occupe »*) et marquer leur résolution avec horodatage (*« Quand c'est réglé »*).
 - **Branche de travail** : **`dev`** (Ne jamais pousser directement sur `main` sans validation).
+- **Stratégie de développement** : Conception et cadrage exhaustifs en amont pour permettre une implémentation fluide et directe de la stack complète.
 
 ---
 
@@ -16,22 +17,18 @@ Ce fichier doit être lu par l'IA au début de chaque session de travail sur ce 
    - Mettre à jour [base_de_connaissance.md](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/base_de_connaissance.md) à chaque décision importante, changement de direction, difficulté rencontrée ou incompréhension signalée par l'utilisateur.
 2. **Gestion Git rigoureuse** :
    - Travailler exclusivement sur la branche `dev`.
-   - Effectuer des commits atomiques avec des messages clairs (format conventionnel recommandé : `feat: ...`, `fix: ...`, `docs: ...`).
+   - Effectuer des commits atomiques avec des messages clairs (`feat: ...`, `fix: ...`, `docs: ...`, `refactor: ...`).
    - Pousser (`git push`) sur le dépôt distant.
-3. **Approche par étapes (Phasing)** :
-   - **Phase actuelle (Phase 1)** : Node.js, stockage simple sans BDD (fichiers JSON ou mémoire persistée), rafraîchissement régulier.
-   - **Phase future (Phase 2)** : MongoDB (NoSQL) et Socket.io pour le temps réel.
+3. **Stack Technique Unifiée** :
+   - **Backend** : Node.js + Express.
+   - **Base de données** : MongoDB (NoSQL) avec ODM Mongoose (ou driver natif).
+   - **Temps Réel** : Socket.IO pour la diffusion instantanée et la synchronisation multi-astreinte.
+   - **Frontend** : HTML5 sémantique, CSS moderne (thème sombre supervision / glassmorphism / design soigné), JavaScript Vanilla pour l'interaction client Socket.IO.
+   - **Outils de test** : Simulateur de pannes/alertes intégré pour démonstration autonome.
 
 ---
 
-## 3. Conventions Techniques
-- **Langage / Environnement** : Node.js (JavaScript ES Modules ou CommonJS selon configuration du projet).
-- **Frontend** : HTML5 sémantique, CSS Vanilla soigné (thème sombre/monitoring moderne, lisibilité optimale pour l'astreinte), JavaScript Vanilla.
-- **Architecture** : Séparation claire entre la logique métier (gestion des serveurs/alertes), l'API/serveur HTTP, et l'interface utilisateur.
-
----
-
-## 4. Check-list de fin d'itération
-- [ ] Le code fonctionne et a été testé.
-- [ ] Les décisions prises sont consignées dans `base_de_connaissance.md`.
-- [ ] Les modifications sont commitées sur `dev` et pushées sur le remote.
+## 3. Check-list de fin de session
+- [ ] Le code fonctionne et a été testé localement.
+- [ ] Les décisions et évolutions sont consignées dans `base_de_connaissance.md`.
+- [ ] Les modifications sont commitées sur `dev` et pushées sur GitHub.
