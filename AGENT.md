@@ -26,8 +26,10 @@ Avant toute proposition ou modification de code, l'IA doit consulter :
   - Tout ce qui concerne le code applicatif va dans `app/`.
 
 ### ⚠️ Architecture & Code
-- Ne pas introduire de code "jetable" (la stack complète Node.js + MongoDB + Socket.IO sera développée directement).
-- Ne pas rajouter de complexité inutile non décidée dans les ADRs (ex: pas d'authentification par mot de passe lourde sans validation, pas de frameworks frontend encombrants).
+- **Stack :** Next.js (React / App Router dans `app/`), MongoDB (Mongoose), Socket.IO.
+- Ne pas introduire de code "jetable" (la stack complète Next.js + MongoDB + Socket.IO sera développée directement).
+- Concurrence stricte : toute prise de ticket doit être atomique au niveau BDD (`findOneAndUpdate` conditionnel) pour empêcher les doubles attributions.
+- Ne pas rajouter de complexité inutile non décidée dans les ADRs (ex: pas d'authentification par mot de passe lourde sans validation).
 
 ---
 

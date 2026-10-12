@@ -1,7 +1,7 @@
 # ADR-0001 : Choix de la stack technique unifiée (Node.js + MongoDB + Socket.IO)
 
 - **Date :** 2026-10-12
-- **Statut :** Accepté
+- **Statut :** Amendé par [ADR-0006](0006-adoption-nextjs.md)
 - **Décideurs :** Théo, Antigravity
 
 ---

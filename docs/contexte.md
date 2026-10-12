@@ -73,11 +73,13 @@ Pour garantir la continuité de service et respecter ses engagements de disponib
 - **Rôle de AGENT.md :** Boussole d'accueil unique de l'IA qui pointe vers `docs/contexte.md` et `docs/adr/`.
 
 ### 2026-10-12 — Étape 5 : Clarification du Push/Pull et simplification via simulateur
-- **Échange :** Précision sur les rôles respectifs :
-  - **Push :** Le serveur distant ou un script déclenche un `POST /api/alerts`.
-  - **Pull :** La sonde Node.js interroge périodiquement les serveurs cibles via `GET /health`.
-  - **Dashboard :** Simple récepteur passif temps réel via Socket.IO.
-- **Réduction de la charge de mise en place :** Pour éviter d'avoir à configurer et maintenir de vrais serveurs distants pour la SAE, un **simulateur intégré** (boutons sur le dashboard ou script `npm run simulate`) sera inclus pour générer des pannes et alertes en direct en 1 clic.
+- **Échange :** Précision sur les rôles respectifs (Push webhook, Pull sonde, Dashboard Socket.IO passif).
+- **Réduction de la charge :** Simulateur intégré pour tester les pannes en 1 clic sans vrais serveurs externes.
+
+### 2026-10-12 — Étape 6 : Adoption de Next.js et concurrence stricte à la milliseconde
+- **Stack :** Choix de **Next.js** pour la stack fullstack (React, App Router, composants modernes) — création de l'**ADR-0006 amendant l'ADR-0001**.
+- **Exigence temps réel & concurrence :** Prise de tickets **à la milliseconde** pour éliminer tout risque de double prise en charge (verrou optimiste atomique MongoDB `findOneAndUpdate` + broadcast Socket.IO immédiat).
+- **Gestion de projet :** Utilisation de GitHub CLI (`gh`) pour structurer les tickets / issues GitHub du projet.
 
 ---
 
