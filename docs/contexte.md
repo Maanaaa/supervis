@@ -99,6 +99,12 @@ Pour garantir la continuité de service et respecter ses engagements de disponib
     - **#5 :** `feat(ui): Dashboard d'Astreinte Temps Réel (React App Router & WebSockets)`
     - **#6 :** `feat(demo): Simulateur de Pannes & Outil de Validation`
 
+### 2026-10-12 — Étape 7 : Gouvernance de la qualité de code & Règles d'agent (ADR-0007)
+- **Objectif :** Garantir que le code produit respecte rigoureusement les conventions de qualité sans dépendre de rappels manuels dans les prompts.
+- **Mise en œuvre :**
+  - Adoption native de `AGENTS.md` et création du dossier `.agents/rules/` (`code-quality.md`, `testing-standards.md`).
+  - Formalisation de cette décision d'architecture dans **l'ADR-0007**.
+
 ---
 
 ## 4. Points en Cours d'Affinage
