@@ -72,6 +72,13 @@ Pour garantir la continuité de service et respecter ses engagements de disponib
 - **Décision :** Condenser le contexte métier et le fil conducteur de la réflexion dans un document unique et fluide (`docs/contexte.md`).
 - **Rôle de AGENT.md :** Boussole d'accueil unique de l'IA qui pointe vers `docs/contexte.md` et `docs/adr/`.
 
+### 2026-10-12 — Étape 5 : Clarification du Push/Pull et simplification via simulateur
+- **Échange :** Précision sur les rôles respectifs :
+  - **Push :** Le serveur distant ou un script déclenche un `POST /api/alerts`.
+  - **Pull :** La sonde Node.js interroge périodiquement les serveurs cibles via `GET /health`.
+  - **Dashboard :** Simple récepteur passif temps réel via Socket.IO.
+- **Réduction de la charge de mise en place :** Pour éviter d'avoir à configurer et maintenir de vrais serveurs distants pour la SAE, un **simulateur intégré** (boutons sur le dashboard ou script `npm run simulate`) sera inclus pour générer des pannes et alertes en direct en 1 clic.
+
 ---
 
 ## 4. Points en Cours d'Affinage
