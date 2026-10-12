@@ -1,5 +1,5 @@
 import { Schema, model, models, Model, Document, Types } from 'mongoose';
-import { IAlert, AlertSeverity, AlertStatus } from '@/types/alert';
+import type { IAlert, AlertSeverity, AlertStatus } from '@/types/alert';
 
 export interface IAlertDocument extends Omit<IAlert, '_id' | 'serverId'>, Document {
   _id: Types.ObjectId;

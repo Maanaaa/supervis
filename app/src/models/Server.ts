@@ -1,5 +1,5 @@
 import { Schema, model, models, Model, Document, Types } from 'mongoose';
-import { IServer, ServerStatus } from '@/types/server';
+import type { IServer, ServerStatus } from '@/types/server';
 
 export interface IServerDocument extends Omit<IServer, '_id'>, Document {
   _id: Types.ObjectId;
