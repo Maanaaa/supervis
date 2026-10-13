@@ -1,0 +1,82 @@
+# AGENT.md — Boussole & Directives de Session pour l'IA
+
+Ce document est le **point d'entrée obligatoire** que l'agent IA doit lire au début de chaque session. Il guide l'IA dans la compréhension des choix, des contraintes et de l'historique du projet.
+
+---
+
+## 1. Protocole de Démarrage de Session (Obligatoire)
+Avant toute proposition ou modification de code, l'IA doit consulter :
+1. [`docs/contexte.md`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/docs/contexte.md) : Pour s'imprégner du métier (petit hébergeur, astreinte, SLA) et du **fil conducteur** de la réflexion.
+2. [`docs/adr/`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/docs/adr/README.md) : Pour comprendre **pourquoi** un choix technique a été fait, quelles alternatives ont été **explicitement rejetées** et ce qu'il est **interdit de refaire**.
+3. [`docs/specifications.md`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/docs/specifications.md) : Pour vérifier l'état actuel des schémas NoSQL, des endpoints et des événements Socket.IO.
+
+---
+
+## 2. Règles Fondamentales & Workflow de Travail
+
+### 📋 Gestion de Projet & Kanban GitHub
+- **L'IA est responsable du pilotage des tickets :**
+  - Elle crée ses propres tickets GitHub (`gh issue create`) avec descriptions détaillées et critères d'acceptation.
+  - **Création d'issue liée à chaque ADR :** Lorsqu'une ADR est rédigée, l'IA crée systématiquement une issue GitHub dédiée décrivant l'implémentation technique attendue, les critères d'acceptation et le lien vers l'ADR.
+  - Elle alimente, documente l'avancement et clôture les tickets au fur et à mesure de l'implémentation (`gh issue close #X`).
+- **Rôle de l'humain (Théo) :**
+  - Supervise le Kanban GitHub, valide les plans d'action, audite les PRs, commits et tests pour vérifier l'alignement avec les attendus.
+
+### 🔄 Protocole Obligatoire de Traitement de Ticket
+Dès que l'utilisateur demande de traiter un ticket (ex: *"Traite le ticket n°X"*), l'IA doit **impérativement et séquentiellement** respecter la boucle suivante :
+1. **Plan d'action à valider :** Rédiger et soumettre à validation le plan d'action détaillé (découpage, fichiers ciblés, stratégie de test).
+2. **Branche de feature dédiée :** Créer une branche issue de `dev` nommée `feat/issue-X-<slug>` (`git checkout -b feat/issue-X-...`). Ne jamais coder directement sur `dev`.
+3. **Développement (Dev) :** Implémenter le code en respectant les standards de qualité (TypeScript strict, pas de `any`, modularité).
+4. **Tests automatisés & Validation CI/CD locale :**
+   - Tests unitaires : `npm test -- tests/unit`
+   - Tests complets : `npm test`
+   - Validation locale complète CI/CD : `npm run typecheck && npm run lint && npm run format:check && npm test && npm run build`
+   - **Obligation absolue (pour le code) :** Retourner **impérativement les tests au statut OK** (100% de succès) dans le compte-rendu pour tout développement applicatif.
+5. **Pull Request (PR) :** Commiter, pousser la branche de feature et ouvrir une PR vers `dev` (`gh pr create --base dev --head feat/issue-X-... --title "..." --body "..."`).
+6. **CI/CD GitHub Actions Verte :** Attendre et surveiller le passage au **VERT ✅** de la CI déclenchée sur la PR (`gh pr checks` / `gh run watch`).
+7. **Comment tester & Rapport de validation :** Retourner impérativement les tests au statut **OK**, fournir le guide pas-à-pas pour tester et valider la fonctionnalité en local, puis clôturer le ticket après accord/merge.
+
+### 📝 Règle Stricte : Rédaction d'ADR ou Documentation Pure (Pas de Tests)
+- **Aucun test lors d'une simple ADR/doc :** Si la demande concerne uniquement la rédaction ou l'amendement d'une ADR ou d'un document (sans écriture de code applicatif dans `app/`), il est **formellement interdit d'exécuter ou d'afficher un rapport de tests** dans la réponse.
+- **Raison :** L'affichage de résultats de tests induit l'utilisateur en erreur en lui faisant croire que la fonctionnalité a été codée et validée.
+- L'obligation d'afficher des tests au statut OK s'applique **exclusivement** aux tickets et interventions comprenant du code applicatif réel.
+
+### ⚠️ Règle d'or des ADRs (Immuabilité)
+- **Ne JAMAIS réécrire ou modifier une décision dans une ADR déjà acceptée.**
+- Si une décision évolue ou change : **créer une nouvelle ADR** qui amende l'ancienne (`ADR-XXXX : Amende ADR-YYYY`). Mettre à jour le statut de l'ancienne vers `Amendé par ADR-XXXX`.
+
+### ⚠️ Gestion Git & Environnement
+- **Branche de référence :** `dev`. La branche `main` est réservée aux versions stables finales.
+- **Workflow de branche :** Toujours créer une branche `feat/issue-X-...` pour chaque ticket, puis faire une PR vers `dev`.
+- **Commits conventionnels :** Effectuer des commits clairs (`feat(...)`, `fix(...)`, `test(...)`) référençant le ticket (`#X`).
+- **Séparation des répertoires :** 
+  - Tout ce qui concerne la documentation et la réflexion va dans `docs/`.
+  - Tout ce qui concerne le code applicatif va dans `app/`.
+
+### ⚠️ Architecture & Code
+- **Stack :** Next.js 14+ (App Router en TypeScript dans `app/`), MongoDB (Mongoose), Socket.IO (via serveur custom `server.js`).
+- **Composants :** Favoriser les Server Components (RSC) pour le rendu initial et le layout ; réserver `'use client'` aux hooks Socket.IO et aux formulaires interactifs.
+- **Organisation :** Structure modulaire stricte dans `app/src/` (`components/`, `hooks/`, `lib/`, `models/`, `types/`).
+- **Concurrence atomique :** Utiliser exclusivement des requêtes conditionnelles MongoDB (`findOneAndUpdate({ _id, status: 'OPEN' }, ...)`) pour la prise de ticket à la milliseconde sans popup.
+
+---
+
+## 3. Cartographie Documentaire
+
+| Document | Rôle pour l'IA |
+| :--- | :--- |
+| [`.agents/rules/error-workflow.md`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/.agents/rules/error-workflow.md) | Workflow obligatoire de traitement et documentation d'erreur. |
+| [`docs/journal-erreurs.md`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/docs/journal-erreurs.md) | Journal officiel des anomalies et résolutions techniques. |
+| [`.agents/rules/`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/.agents/rules/code-quality.md) | Règles d'excellence du code (TypeScript strict, concurrence, tests). |
+| [`docs/contexte.md`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/docs/contexte.md) | Comprendre le problème client, les enjeux d'astreinte et le fil conducteur. |
+| [`docs/adr/README.md`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/docs/adr/README.md) | Comprendre les arbitrages techniques fermes et les pièges évités. |
+| [`docs/specifications.md`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/docs/specifications.md) | Modèles Mongo, routes REST, Socket.io et IHM. |
+| `app/` | Répertoire de l'application à implémenter. |
+
+---
+
+## 4. Check-list de Fin de Session
+- [ ] Le code fonctionne et respecte les ADRs en vigueur.
+- [ ] Les nouveaux arbitrages sont rédigés sous forme de nouveaux ADRs (sans modifier les anciens).
+- [ ] Le journal dans `docs/contexte.md` est enrichi si de nouveaux arbitrages ont eu lieu.
+- [ ] Tout est commité et pushé sur la branche `dev`.
