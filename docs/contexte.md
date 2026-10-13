@@ -133,6 +133,17 @@ Pour garantir la continuité de service et respecter ses engagements de disponib
   - Intégration en tâche de fond dans `server.js` et exposition d'un endpoint `POST /api/poller` pour déclenchement programmatique / simulation.
   - Suite de tests complète (unitaires, intégration, fonctionnels) validant 34 tests au vert.
 
+### 2026-10-12 — Étape 12 : Traitement complet du Ticket #4 (Route Handlers REST & Verrouillage Atomique Sub-milliseconde)
+- **Réalisation technique :**
+  - Routes d'alertes complètes : `GET /api/alerts` (filtrage actives/historique) et `POST /api/alerts` (ingestion push webhook + diffusion `alert:new`).
+  - Actions d'astreinte sur `PATCH /api/alerts/[id]` :
+    - Action `ACK` : verrouillage atomique conditionnel (`findOneAndUpdate({ _id, status: 'OPEN' })`), rejet 409 Conflict pour les requêtes concurrentes perdantes sans popup, diffusion `alert:updated`.
+    - Action `TRANSFER` : délégation réservée au technicien actuellement titulaire (protection anti-vol de ticket avec traçabilité dans `transferredFrom`).
+    - Action `RESOLVE` : clôture avec horodatage `resolvedAt` et persistance du commentaire optionnel.
+  - Routes parc serveurs : `GET / POST /api/servers` et `GET /api/servers/[id]` (fiche détaillée et historique complet des tickets liés).
+  - Route annuaire opérateurs : `GET / POST /api/users`.
+  - Suite de tests complète (51 tests 100% au vert) validant la course critique concurrente avec 10 requêtes simultanées.
+
 ---
 
 ## 4. Points en Cours d'Affinage

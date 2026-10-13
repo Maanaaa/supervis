@@ -18,3 +18,13 @@ export function getIO(): SocketIOServer {
   }
   return global.__io;
 }
+
+export function emitSocket(event: string, payload: unknown): void {
+  try {
+    if (global.__io) {
+      global.__io.emit(event, payload);
+    }
+  } catch {
+    // Silencieux si Socket.IO n'est pas instancié (ex: contexte de test unitaire)
+  }
+}
