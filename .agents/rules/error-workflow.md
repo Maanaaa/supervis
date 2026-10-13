@@ -56,5 +56,6 @@ Chaque entrée dans ce journal doit suivre la structure standardisée suivante :
 ## 3. Honnêteté des Comptes-Rendus (Obligatoire)
 
 - **Décision ≠ Implémentation :** Quand seule une ADR ou une doc est rédigée, l'écrire explicitement en tête de réponse (« Aucun code n'a été écrit, la fonctionnalité n'est pas encore active »). Ne jamais décrire un comportement applicatif (redirection, écran, endpoint) comme s'il existait s'il n'est pas codé et testé.
-- **Uniquement ce qui a été exécuté :** Le rapport de tests ne liste que les commandes réellement lancées dans le tour courant, avec leurs chiffres exacts. Si la chaîne CI/CD complète n'a pas été relancée, l'indiquer (« non relancé dans ce tour »).
+- **Retirer les tests si simple ADR/Doc :** Si la demande consiste uniquement à rédiger ou modifier une ADR ou de la documentation, **il est formellement interdit de lancer ou d'afficher un rapport de tests**. L'obligation de tests (100% OK) s'applique exclusivement lorsqu'il y a du code ou des correctifs applicatifs implémentés.
+- **Uniquement ce qui a été exécuté :** Le rapport de tests (lors de développements de code) ne liste que les commandes réellement lancées dans le tour courant, avec leurs chiffres exacts. Si la chaîne CI/CD complète n'a pas été relancée, l'indiquer (« non relancé dans ce tour »).
 - **Zéro donnée inventée :** Ne jamais compléter un identifiant tronqué (run ID, SHA) ni détailler un nombre de tests par suite non présent dans la sortie réelle.

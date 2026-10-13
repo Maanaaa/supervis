@@ -30,10 +30,15 @@ Dès que l'utilisateur demande de traiter un ticket (ex: *"Traite le ticket n°X
    - Tests unitaires : `npm test -- tests/unit`
    - Tests complets : `npm test`
    - Validation locale complète CI/CD : `npm run typecheck && npm run lint && npm run format:check && npm test && npm run build`
-   - **Obligation absolue :** Retourner **impérativement les tests au statut OK** (100% de succès) dans le compte-rendu.
+   - **Obligation absolue (pour le code) :** Retourner **impérativement les tests au statut OK** (100% de succès) dans le compte-rendu pour tout développement applicatif.
 5. **Pull Request (PR) :** Commiter, pousser la branche de feature et ouvrir une PR vers `dev` (`gh pr create --base dev --head feat/issue-X-... --title "..." --body "..."`).
 6. **CI/CD GitHub Actions Verte :** Attendre et surveiller le passage au **VERT ✅** de la CI déclenchée sur la PR (`gh pr checks` / `gh run watch`).
 7. **Comment tester & Rapport de validation :** Retourner impérativement les tests au statut **OK**, fournir le guide pas-à-pas pour tester et valider la fonctionnalité en local, puis clôturer le ticket après accord/merge.
+
+### 📝 Règle Stricte : Rédaction d'ADR ou Documentation Pure (Pas de Tests)
+- **Aucun test lors d'une simple ADR/doc :** Si la demande concerne uniquement la rédaction ou l'amendement d'une ADR ou d'un document (sans écriture de code applicatif dans `app/`), il est **formellement interdit d'exécuter ou d'afficher un rapport de tests** dans la réponse.
+- **Raison :** L'affichage de résultats de tests induit l'utilisateur en erreur en lui faisant croire que la fonctionnalité a été codée et validée.
+- L'obligation d'afficher des tests au statut OK s'applique **exclusivement** aux tickets et interventions comprenant du code applicatif réel.
 
 ### ⚠️ Règle d'or des ADRs (Immuabilité)
 - **Ne JAMAIS réécrire ou modifier une décision dans une ADR déjà acceptée.**

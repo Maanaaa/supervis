@@ -25,7 +25,8 @@ Cette règle est contraignante et prioritaire. À chaque fois que l'utilisateur 
      - Tests unitaires : `npm test -- tests/unit`
      - Tests complets (unitaires, fonctionnels, E2E, intégration) : `npm test`
      - Validation locale complète CI/CD : `npm run typecheck && npm run lint && npm run format:check && npm test && npm run build`
-   - **Obligation absolue d'affichage OK :** Il est **impératif de retourner les tests au statut OK** (100% de succès, 0 échec) dans chaque compte-rendu avec le détail des suites et tests exécutés.
+   - **Obligation absolue d'affichage OK (code applicatif uniquement) :** Il est **impératif de retourner les tests au statut OK** (100% de succès, 0 échec) dans chaque compte-rendu pour tout développement applicatif.
+   - **Exclusion formelle pour les ADRs / docs :** Si une tâche ou un ticket concerne uniquement la rédaction d'une ADR ou de la documentation sans toucher au code applicatif, **retirer et ne jamais afficher de tests**.
    - Interdiction de soumettre une PR si un seul test ou check échoue.
 
 5. **Pull Request (PR) vers `dev` :**
