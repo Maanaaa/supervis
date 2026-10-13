@@ -2,8 +2,15 @@ const http = require('http');
 const { parse } = require('url');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const next = require('next');
 const { Server: SocketIOServer } = require('socket.io');
+
+function hashPassword(password) {
+  const salt = crypto.randomBytes(16).toString('hex');
+  const derivedKey = crypto.scryptSync(password, salt, 64);
+  return `${salt}:${derivedKey.toString('hex')}`;
+}
 
 const dev = process.env.NODE_ENV !== 'production';
 const hostname = 'localhost';
@@ -16,6 +23,45 @@ if (dev && fs.existsSync(path.join(__dirname, '.next', 'BUILD_ID'))) {
     console.log('> Cache de production .next nettoyé pour un démarrage de développement propre.');
   } catch (e) {
     console.warn('> Avertissement nettoyage .next :', e.message);
+  }
+}
+
+async function seedDefaultOperators(db) {
+  const adminPasswordHash = hashPassword('admin');
+  const usersCount = await db.collection('users').countDocuments();
+  if (usersCount === 0) {
+    await db.collection('users').insertMany([
+      {
+        name: 'Théo',
+        email: 'theo@supervis.local',
+        phone: '+33 6 00 00 00 01',
+        password: adminPasswordHash,
+        role: 'ADMIN',
+        isOnDuty: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        name: 'Sarah',
+        email: 'sarah@supervis.local',
+        phone: '+33 6 00 00 00 02',
+        password: adminPasswordHash,
+        role: 'ASTREINTE',
+        isOnDuty: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ]);
+    console.log('> Opérateurs par défaut initialisés (Théo, Sarah avec mot de passe admin).');
+  } else {
+    await db.collection('users').updateOne(
+      { email: 'theo@supervis.local', password: { $exists: false } },
+      { $set: { password: adminPasswordHash } }
+    );
+    await db.collection('users').updateOne(
+      { email: 'sarah@supervis.local', password: { $exists: false } },
+      { $set: { password: adminPasswordHash } }
+    );
   }
 }
 
@@ -45,6 +91,13 @@ async function setupDatabase() {
   if (isLocalMongoUp) {
     process.env.MONGODB_URI = 'mongodb://127.0.0.1:27017/supervis';
     console.log(`> Démon MongoDB local détecté sur le port 27017.`);
+    try {
+      const mongoose = require('mongoose');
+      await mongoose.connect(process.env.MONGODB_URI, { serverSelectionTimeoutMS: 3000 });
+      await seedDefaultOperators(mongoose.connection.db);
+    } catch (e) {
+      console.warn(`> Initialisation opérateurs local Mongo :`, e.message);
+    }
     return process.env.MONGODB_URI;
   }
 
@@ -100,35 +153,7 @@ async function setupDatabase() {
         ]);
       }
 
-      const usersCount = await db.collection('users').countDocuments();
-      if (usersCount === 0) {
-        await db.collection('users').insertMany([
-          {
-            name: 'Théo',
-            email: 'theo@supervis.local',
-            role: 'ADMIN',
-            isOnDuty: true,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          },
-          {
-            name: 'Sarah',
-            email: 'sarah@supervis.local',
-            role: 'ASTREINTE',
-            isOnDuty: true,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          },
-          {
-            name: 'Alexandre',
-            email: 'alex@supervis.local',
-            role: 'ASTREINTE',
-            isOnDuty: false,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          },
-        ]);
-      }
+      await seedDefaultOperators(db);
 
       const alertsCount = await db.collection('alerts').countDocuments();
       if (alertsCount === 0) {

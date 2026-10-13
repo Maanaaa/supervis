@@ -20,63 +20,13 @@ export async function GET() {
   }
 }
 
-export async function POST(request: Request) {
-  try {
-    await connectDB();
-
-    let body: {
-      name?: string;
-      email?: string;
-      phone?: string;
-      role?: UserRole;
-      isOnDuty?: boolean;
-    };
-
-    try {
-      body = await request.json();
-    } catch {
-      return NextResponse.json(
-        { success: false, error: 'Corps de requête JSON invalide.' },
-        { status: 400 }
-      );
-    }
-
-    const { name, email, phone, role = 'ASTREINTE', isOnDuty = false } = body;
-
-    if (!name || typeof name !== 'string' || name.trim() === '') {
-      return NextResponse.json(
-        { success: false, error: 'Le nom de l’opérateur est obligatoire.' },
-        { status: 400 }
-      );
-    }
-
-    if (!email || typeof email !== 'string' || email.trim() === '') {
-      return NextResponse.json(
-        { success: false, error: 'L’email est obligatoire.' },
-        { status: 400 }
-      );
-    }
-
-    const existing = await User.findOne({ email: email.trim().toLowerCase() });
-    if (existing) {
-      return NextResponse.json(
-        { success: false, error: 'Un utilisateur avec cet email existe déjà.' },
-        { status: 409 }
-      );
-    }
-
-    const user = await User.create({
-      name: name.trim(),
-      email: email.trim().toLowerCase(),
-      phone: phone?.trim(),
-      role,
-      isOnDuty: Boolean(isOnDuty),
-    });
-
-    return NextResponse.json({ success: true, user }, { status: 201 });
-  } catch (error: unknown) {
-    console.error('[API Users POST] Erreur :', error);
-    const message = error instanceof Error ? error.message : 'Erreur interne du serveur';
-    return NextResponse.json({ success: false, error: message }, { status: 500 });
-  }
+export async function POST() {
+  return NextResponse.json(
+    {
+      success: false,
+      error:
+        "La création libre de compte opérateur est formellement désactivée (ADR-0008). Les comptes d'astreinte sont pré-configurés.",
+    },
+    { status: 403 }
+  );
 }

@@ -1,17 +1,18 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import type { IUser } from '@/types/user';
+import { useState, useEffect, useCallback } from 'react';
+import type { IUser, ISessionPayload } from '@/types/user';
 
 const STORAGE_KEY = 'supervis_current_operator';
 const DEFAULT_OPERATOR = 'Théo';
 
 export function useOperator() {
   const [operator, setOperator] = useState<string>(DEFAULT_OPERATOR);
+  const [sessionUser, setSessionUser] = useState<ISessionPayload | null>(null);
   const [operatorsList, setOperatorsList] = useState<IUser[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // Initialisation depuis localStorage
+  // Initialisation depuis localStorage (pour affichage immédiat sans saut de rendu)
   useEffect(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
@@ -23,7 +24,38 @@ export function useOperator() {
     }
   }, []);
 
-  // Chargement de l'annuaire des techniciens
+  // Synchronisation avec la session active (/api/auth/me)
+  useEffect(() => {
+    let isMounted = true;
+
+    async function fetchMe() {
+      try {
+        const res = await fetch('/api/auth/me');
+        if (res.ok) {
+          const data = await res.json();
+          if (isMounted && data.user) {
+            setSessionUser(data.user);
+            setOperator(data.user.name);
+            try {
+              localStorage.setItem(STORAGE_KEY, data.user.name);
+            } catch {
+              // Ignorer
+            }
+          }
+        }
+      } catch {
+        // Mode hors ligne
+      }
+    }
+
+    fetchMe();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Chargement de l'annuaire des techniciens (pour la passation / transfert d'alertes)
   useEffect(() => {
     let isMounted = true;
 
@@ -62,9 +94,25 @@ export function useOperator() {
     }
   };
 
+  const logout = useCallback(async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } catch {
+      // Ignorer
+    }
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      // Ignorer
+    }
+    window.location.href = '/login';
+  }, []);
+
   return {
     operator,
+    sessionUser,
     changeOperator,
+    logout,
     operatorsList,
     isLoading,
   };

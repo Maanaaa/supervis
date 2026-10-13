@@ -2,12 +2,18 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useSocket } from '@/hooks/useSocket';
 import { useOperator } from '@/hooks/useOperator';
 
 export function Header() {
+  const pathname = usePathname();
   const { isConnected } = useSocket();
-  const { operator, changeOperator, operatorsList } = useOperator();
+  const { operator, sessionUser, logout } = useOperator();
+
+  if (pathname === '/login') {
+    return null;
+  }
 
   return (
     <header
@@ -75,9 +81,9 @@ export function Header() {
           </Link>
         </div>
 
-        {/* Right actions: Socket indicator & Operator selector */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-          {/* Socket Live Status */}
+        {/* Actions de droite : Statut WebSockets + Profil connecté + Déconnexion */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          {/* Indicateur flux temps réel */}
           <div
             id="socket-status-indicator"
             style={{
@@ -103,69 +109,91 @@ export function Header() {
             <span>{isConnected ? 'FLUX TEMPS RÉEL' : 'RECONNEXION...'}</span>
           </div>
 
-          {/* Current Operator Selector */}
+          {/* Badge opérateur connecté */}
           <div
-            id="operator-selector-wrapper"
+            id="operator-profile-badge"
             style={{
               display: 'flex',
               alignItems: 'center',
               gap: '0.5rem',
               backgroundColor: 'var(--bg-card)',
               border: '1px solid var(--border-color)',
-              padding: '0.3rem 0.75rem',
+              padding: '0.35rem 0.75rem',
               borderRadius: 'var(--radius-md)',
+              fontSize: '0.8125rem',
             }}
           >
-            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Technicien :</span>
-            <select
-              id="active-operator-select"
-              value={operator}
-              aria-label="Sélectionner le technicien d'astreinte"
-              onChange={(e) => changeOperator(e.target.value)}
+            <div
               style={{
-                backgroundColor: 'transparent',
-                border: 'none',
-                color: '#ffffff',
-                fontWeight: 600,
-                fontSize: '0.85rem',
-                cursor: 'pointer',
-                padding: '0 0.25rem',
+                width: '8px',
+                height: '8px',
+                borderRadius: '50%',
+                backgroundColor: 'var(--accent-primary)',
               }}
-            >
-              {operatorsList.length > 0 ? (
-                operatorsList.map((user) => (
-                  <option
-                    key={user._id}
-                    value={user.name}
-                    style={{ backgroundColor: 'var(--bg-secondary)', color: '#fff' }}
-                  >
-                    {user.name} {user.isOnDuty ? '(De garde)' : ''}
-                  </option>
-                ))
-              ) : (
-                <>
-                  <option
-                    value="Théo"
-                    style={{ backgroundColor: 'var(--bg-secondary)', color: '#fff' }}
-                  >
-                    Théo (Astreinte)
-                  </option>
-                  <option
-                    value="Sarah"
-                    style={{ backgroundColor: 'var(--bg-secondary)', color: '#fff' }}
-                  >
-                    Sarah (Astreinte)
-                  </option>
-                  <option
-                    value="Alexandre"
-                    style={{ backgroundColor: 'var(--bg-secondary)', color: '#fff' }}
-                  >
-                    Alexandre (Astreinte)
-                  </option>
-                </>
-              )}
-            </select>
+            />
+            <span style={{ color: 'var(--text-secondary)' }}>Opérateur :</span>
+            <strong style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{operator}</strong>
+            {sessionUser?.role && (
+              <span
+                style={{
+                  fontSize: '0.6875rem',
+                  padding: '0.1rem 0.4rem',
+                  borderRadius: 'var(--radius-full)',
+                  backgroundColor: 'rgba(99, 102, 241, 0.15)',
+                  color: 'var(--accent-primary)',
+                  fontWeight: 600,
+                  border: '1px solid rgba(99, 102, 241, 0.3)',
+                }}
+              >
+                {sessionUser.role}
+              </span>
+            )}
           </div>
+
+          {/* Bouton Déconnexion */}
+          <button
+            id="btn-logout"
+            onClick={logout}
+            title="Se déconnecter"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.35rem',
+              padding: '0.35rem 0.75rem',
+              background: 'transparent',
+              border: '1px solid var(--border-color)',
+              borderRadius: 'var(--radius-md)',
+              color: 'var(--text-secondary)',
+              fontSize: '0.8125rem',
+              fontWeight: 500,
+              cursor: 'pointer',
+              transition: 'all var(--transition-fast)',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = 'var(--accent-critical)';
+              e.currentTarget.style.color = 'var(--accent-critical)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = 'var(--border-color)';
+              e.currentTarget.style.color = 'var(--text-secondary)';
+            }}
+          >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
+            <span>Déconnexion</span>
+          </button>
         </div>
       </div>
     </header>
