@@ -48,3 +48,17 @@ Cette règle est contraignante et prioritaire. À chaque fois que l'utilisateur 
    - **Retourner impérativement les tests en OK** dans la réponse avec le résumé exact des résultats.
    - Fournir un guide pas-à-pas clair et actionnable pour tester en local.
    - Proposer ensuite le ticket suivant.
+
+---
+
+## Liaison ADR & Création d'Issue GitHub
+
+À chaque fois que l'utilisateur demande de concevoir ou rédiger une ADR :
+1. **Rédaction de l'ADR :** Rédiger le document dans `docs/adr/XXXX-<slug>.md` et mettre à jour le sommaire `docs/adr/README.md`.
+2. **Création systématique de l'Issue GitHub (`gh issue create`) :**
+   - Créer une issue détaillée pour l'implémentation future qui découle de cette ADR.
+   - Inclure :
+     - Contexte et justification architecturale (lien vers l'ADR).
+     - Spécifications fonctionnelles et techniques attendues.
+     - Critères d'acceptation précis (DoD).
+3. **Pas de tests :** Ne jamais lancer ni afficher de tests applicatifs lors de cette étape de simple décision/documentation.
