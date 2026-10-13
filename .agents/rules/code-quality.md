@@ -23,11 +23,16 @@ Ces règles sont automatiquement chargées par Antigravity pour garantir l'excel
     1. `src/app/error.tsx` : Error Boundary de segment racine (`'use client'` obligatoire, avec `{ error, reset }` et bouton de réessai).
     2. `src/app/global-error.tsx` : Error Boundary global englobant `<html>` et `<body>` en cas de défaillance du Root Layout.
     3. `src/app/not-found.tsx` : Gestion propre des erreurs 404.
+    4. `src/app/loading.tsx` : Skeleton / loader global assurant un feedback visuel instantané (<16ms) lors des transitions de pages sous React Suspense, empêchant la sensation de clic inactif.
   - **Interdiction formelle d'omettre ces composants** : leur absence force Next.js à injecter `<pre>missing required error components, refreshing...</pre>` avec un script de rechargement en boucle infinie qui paralyse le navigateur en cas d'erreur ou d'incident réseau/BDD.
+- **Sécurisation des Hooks Clients** :
+  - `usePathname()` retourne `string | null` : toujours tester la vérité de la variable avant tout appel de méthode (`pathname ? pathname.startsWith(...) : false`) pour éviter tout crash d'hydratation React.
 
 ---
 
 ## 3. Robustesse & Concurrence en Base de Données
+- **Timeouts de connexion stricts** :
+  - Toujours spécifier `serverSelectionTimeoutMS: 3000` (ou inférieur) sur `mongoose.connect()`. Ne jamais laisser le timeout par défaut (30s) bloquer les rendus SSR ou les requêtes API en cas d'indisponibilité de la base.
 - **Verrouillage atomique conditionnel** :
   - Toute prise de ticket d'astreinte doit s'effectuer via une requête atomique conditionnelle (`findOneAndUpdate({ _id, status: 'OPEN' }, ...)`).
   - En cas de collision, renvoyer un statut HTTP 409 Conflict sans altérer les données existantes.

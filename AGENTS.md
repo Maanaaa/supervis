@@ -55,6 +55,8 @@ Dès que l'utilisateur demande de traiter un ticket (ex: *"Traite le ticket n°X
 
 | Document | Rôle pour l'IA |
 | :--- | :--- |
+| [`.agents/rules/error-workflow.md`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/.agents/rules/error-workflow.md) | Workflow obligatoire de traitement et documentation d'erreur. |
+| [`docs/journal-erreurs.md`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/docs/journal-erreurs.md) | Journal officiel des anomalies et résolutions techniques. |
 | [`.agents/rules/`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/.agents/rules/code-quality.md) | Règles d'excellence du code (TypeScript strict, concurrence, tests). |
 | [`docs/contexte.md`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/docs/contexte.md) | Comprendre le problème client, les enjeux d'astreinte et le fil conducteur. |
 | [`docs/adr/README.md`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/docs/adr/README.md) | Comprendre les arbitrages techniques fermes et les pièges évités. |

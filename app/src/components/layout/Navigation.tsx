@@ -24,16 +24,18 @@ export function Navigation() {
     >
       <div className="container" style={{ display: 'flex', gap: '0.5rem' }}>
         {links.map((link) => {
-          const isActive =
-            link.href === '/'
+          const isActive = pathname
+            ? link.href === '/'
               ? pathname === '/'
-              : pathname === link.href || pathname.startsWith(`${link.href}/`);
+              : pathname === link.href || pathname.startsWith(`${link.href}/`)
+            : false;
 
           return (
             <Link
               key={link.href}
               id={link.id}
               href={link.href}
+              prefetch={true}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
