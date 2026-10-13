@@ -144,6 +144,18 @@ Pour garantir la continuité de service et respecter ses engagements de disponib
   - Route annuaire opérateurs : `GET / POST /api/users`.
   - Suite de tests complète (51 tests 100% au vert) validant la course critique concurrente avec 10 requêtes simultanées.
 
+### 2026-10-13 — Étape 13 : Traitement complet du Ticket #5 (Dashboard d'Astreinte Temps Réel & WebSockets)
+- **Réalisation technique :**
+  - Design system sombre orienté supervision nocturne (glassmorphism, variables CSS, micro-animations, typographie claire).
+  - Composants d'interface réactifs :
+    - `Header` avec statut de connexion Socket.IO en direct et sélecteur d'opérateur d'astreinte persistant (`useOperator`).
+    - `Navigation` par onglets (`/`, `/history`, `/servers`).
+    - `MetricBanner` avec compteurs dynamiques en temps réel (critiques, avertissements, en cours, parc de serveurs).
+    - `AlertCard` & `AlertList` : Prise de ticket en 1 clic sans popup intrusive, délégation réservée au titulaire, clôture avec commentaire optionnel, et écoute des flux Socket.IO (`alert:new`, `alert:updated`, `server:status_change`).
+    - `HistoryList` (`/history`) : Traçabilité des incidents résolus, post-mortem et calcul du MTTR moyen.
+    - `ServerGrid` & `AddServerForm` (`/servers` et `/servers/[id]`) : Surveillance du parc, ajout sans rechargement et fiches détaillées avec historique lié.
+  - Suite de 65 tests automatisés validée et build Next.js 100% au vert.
+
 ---
 
 ## 4. Points en Cours d'Affinage
