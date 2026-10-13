@@ -27,6 +27,9 @@ Ces règles sont automatiquement chargées par Antigravity pour garantir l'excel
   - **Interdiction formelle d'omettre ces composants** : leur absence force Next.js à injecter `<pre>missing required error components, refreshing...</pre>` avec un script de rechargement en boucle infinie qui paralyse le navigateur en cas d'erreur ou d'incident réseau/BDD.
 - **Sécurisation des Hooks Clients** :
   - `usePathname()` retourne `string | null` : toujours tester la vérité de la variable avant tout appel de méthode (`pathname ? pathname.startsWith(...) : false`) pour éviter tout crash d'hydratation React.
+- **Serveur Custom Next.js & Résolution d'Assets (`server.js`)** :
+  - Toujours analyser l'URL avec `parse(req.url, true)` et appeler `handle(req, res, parsedUrl)`. Ne jamais passer `handle(req, res)` brut sous peine de casser la distribution des fichiers statiques et CSS avec query string (`?v=...`), ce qui produit un rendu HTML brut sans aucun style (404 CSS).
+  - En mode développement (`dev`), purger automatiquement tout résidu de build de production dans `.next` (`BUILD_ID`) pour éviter les conflits de manifestes webpack et garantir la compilation CSS à chaud.
 
 ---
 

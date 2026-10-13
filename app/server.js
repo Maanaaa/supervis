@@ -1,10 +1,23 @@
 const http = require('http');
+const { parse } = require('url');
+const fs = require('fs');
+const path = require('path');
 const next = require('next');
 const { Server: SocketIOServer } = require('socket.io');
 
 const dev = process.env.NODE_ENV !== 'production';
 const hostname = 'localhost';
 const port = parseInt(process.env.PORT || '3000', 10);
+
+// Nettoyage automatique des résidus de build de production lors du lancement en développement
+if (dev && fs.existsSync(path.join(__dirname, '.next', 'BUILD_ID'))) {
+  try {
+    fs.rmSync(path.join(__dirname, '.next'), { recursive: true, force: true });
+    console.log('> Cache de production .next nettoyé pour un démarrage de développement propre.');
+  } catch (e) {
+    console.warn('> Avertissement nettoyage .next :', e.message);
+  }
+}
 
 async function setupDatabase() {
   if (process.env.MONGODB_URI) {
@@ -163,7 +176,8 @@ setupDatabase().then(() => {
   return app.prepare();
 }).then(() => {
   const server = http.createServer((req, res) => {
-    handle(req, res);
+    const parsedUrl = parse(req.url, true);
+    handle(req, res, parsedUrl);
   });
 
   const io = new SocketIOServer(server, {

@@ -45,3 +45,23 @@ Ce document consigne l'historique exhaustif des anomalies signalées, leur diagn
   - Création de la règle de workflow [`.agents/rules/error-workflow.md`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/.agents/rules/error-workflow.md).
   - Enrichissement de [`.agents/rules/code-quality.md`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/.agents/rules/code-quality.md) sur la réactivité de navigation et la présence impérative de `loading.tsx`.
 - **Statut :** Résolu ✅
+
+---
+
+### [ERR-20261013-03] Absence de styles CSS dans le navigateur (fond blanc, polices serif)
+
+- **Date & Heure :** 2026-10-13 09:05:00
+- **Signalement Utilisateur :**
+  > "POurquoi je n'ai pas de css" (+ capture d'écran montrant l'application non stylisée, fond blanc, boutons bruts, polices serif).
+- **Symptôme Constaté :**
+  Le navigateur affiche l'application sur fond blanc avec la police par défaut du système (`Times New Roman` / Serif) et des boutons HTML bruts non stylisés. La requête HTTP `GET /_next/static/css/app/layout.css` renvoie une erreur 404.
+- **Analyse de Cause Racine (RCA) :**
+  1. **Absence de parsing URL dans le serveur custom Next.js :** Dans `server.js`, la requête était transmise brute à `handle(req, res)` au lieu de `handle(req, res, parsedUrl)` avec `parse(req.url, true)`. Lors de requêtes sur les fichiers statiques de style avec paramètre de version (`/_next/static/css/app/layout.css?v=...`), Next.js tentait de résoudre le fichier littéral avec le query string sur le disque et échouait avec un statut 404.
+  2. **Collision de cache .next entre build et dev :** L'exécution de `npm run build` en parallèle du serveur de développement dépose les manifestes et fichiers de production (`.next/BUILD_ID`). Lorsque le serveur `dev` lit ce dossier de build de production, le compilateur dev webpack entre en conflit sur les assets CSS statiques.
+  3. **Processus Node.js non rechargé :** Le serveur `node server.js` était en exécution continue depuis 16 minutes (PID démarré avant l'intégration des correctifs).
+- **Correctifs Appliqués :**
+  - **Parsing URL complet :** Passage systématique de `parsedUrl` (`parse(req.url, true)`) à `handle(req, res, parsedUrl)` dans [`server.js`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/app/server.js).
+  - **Purge automatique du cache de production en dev :** Dans `server.js`, détection automatique de la présence de `.next/BUILD_ID` lors du lancement en mode développement pour purger `.next` et garantir un démarrage propre avec compilation CSS dynamique à chaud.
+- **Règles & Prévention :**
+  - Règle ajoutée dans [`.agents/rules/code-quality.md`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/.agents/rules/code-quality.md) sur la configuration stricte des serveurs personnalisés Next.js (`parsedUrl` obligatoire) et l'isolation des environnements dev/prod.
+- **Statut :** Résolu ✅
