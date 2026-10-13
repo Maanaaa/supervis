@@ -17,6 +17,7 @@ Avant toute proposition ou modification de code, l'IA doit consulter :
 ### 📋 Gestion de Projet & Kanban GitHub
 - **L'IA est responsable du pilotage des tickets :**
   - Elle crée ses propres tickets GitHub (`gh issue create`) avec descriptions détaillées et critères d'acceptation.
+  - **Création d'issue liée à chaque ADR :** Lorsqu'une ADR est rédigée, l'IA crée systématiquement une issue GitHub dédiée décrivant l'implémentation technique attendue, les critères d'acceptation et le lien vers l'ADR.
   - Elle alimente, documente l'avancement et clôture les tickets au fur et à mesure de l'implémentation (`gh issue close #X`).
 - **Rôle de l'humain (Théo) :**
   - Supervise le Kanban GitHub, valide les plans d'action, audite les PRs, commits et tests pour vérifier l'alignement avec les attendus.
