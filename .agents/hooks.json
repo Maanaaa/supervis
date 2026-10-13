@@ -1,0 +1,39 @@
+{
+  "git-security": {
+    "PreToolUse": [
+      {
+        "matcher": "run_command",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./scripts/git-guard.sh",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  },
+  "auto-format": {
+    "PostToolUse": [
+      {
+        "matcher": "write_to_file|replace_file_content|multi_replace_file_content",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./scripts/auto-format.sh",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  },
+  "test-guard": {
+    "Stop": [
+      {
+        "type": "command",
+        "command": "./scripts/test-guard.sh",
+        "timeout": 60
+      }
+    ]
+  }
+}
