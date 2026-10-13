@@ -44,6 +44,9 @@ Chaque entrée dans ce journal doit suivre la structure standardisée suivante :
    - Identifier pourquoi le problème s'est produit.
    - Ajouter ou enrichir une règle dans `.agents/rules/` (`code-quality.md`, `error-workflow.md`, `testing-standards.md`) afin que la cause identifiée soit formellement bannie pour tous les développements futurs.
 
-5. **Validation par les Tests & Build :**
-   - Exécuter la suite complète de contrôle (`npm run typecheck`, `npm run lint`, `npm test`, `npm run build`).
-   - S'assurer que le pipeline CI passe au vert avant de valider.
+5. **Validation par les Tests & CI/CD (Retour OK obligatoire) :**
+   - Tests unitaires : `npm test -- tests/unit`
+   - Tests complets : `npm test`
+   - Chaîne locale CI/CD : `npm run typecheck && npm run lint && npm run format:check && npm test && npm run build`
+   - **Retourner impérativement les tests au statut OK (100% de succès)** dans la réponse à l'utilisateur.
+   - S'assurer que le pipeline distant GitHub Actions passe au **VERT ✅** (`gh pr checks`).
