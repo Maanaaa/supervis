@@ -85,3 +85,24 @@ Ce document consigne l'historique exhaustif des anomalies signalées, leur diagn
   - Ajout dans [`AGENTS.md`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/AGENTS.md), [`.agents/rules/error-workflow.md`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/.agents/rules/error-workflow.md) et [`.agents/rules/ticket-workflow.md`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/.agents/rules/ticket-workflow.md) de la règle formelle : **« Retirer les tests si simple ADR/doc »**. Il est strictement interdit d'exécuter ou d'afficher un rapport de tests lorsqu'une intervention ne concerne qu'une ADR ou de la documentation, afin d'éviter toute ambiguïté sur l'existence ou non du code applicatif.
   - Règle d'honnêteté des comptes-rendus : distinguer explicitement « décision documentée » et « fonctionnalité implémentée », ne rapporter que les commandes réellement exécutées dans le tour.
 - **Statut :** Résolu côté règles ✅ (Règle actée et verrouillée dans les fichiers de règles ; implémentation de l'auth en attente de traitement du ticket #10)
+
+---
+
+### [ERR-20261013-05] Perte des styles CSS suite à l'exécution de next build en parallèle du serveur dev
+
+- **Date & Heure :** 2026-10-13 09:57:00
+- **Signalement Utilisateur :**
+  > "L'app est à nouveau pas styilisée." (+ capture d'écran montrant la page `/login` avec fond sombre inline mais textes noirs non contrastés, police avec empattement serif et boutons bruts).
+- **Symptôme Constaté :**
+  La requête HTTP `GET /_next/static/css/app/layout.css?v=...` renvoie un statut `404 Not Found`. Par conséquent, l'ensemble des variables CSS (`--text-primary`, `--bg-glass`, `--border-color`, `--radius-*`) et polices système de `globals.css` ne sont pas chargées, laissant les éléments HTML avec leurs styles par défaut du navigateur (textes noirs, Times New Roman, inputs sans bordure).
+- **Analyse de Cause Racine (RCA) :**
+  1. **Écrasement du dossier de build `.next` par la validation CI/CD :** Lors de la phase de validation obligatoire du ticket #10, la commande locale `npm run build` a été exécutée. `next build` nettoie `.next` et compile la production, en extrayant les feuilles de styles dans des fichiers CSS hachés (ex: `.next/static/css/bf3af5cdeda10d4d.css`) au lieu de l'arborescence de développement (`.next/static/css/app/layout.css`).
+  2. **Désynchronisation du serveur dev actif :** Le serveur de développement (`node server.js`, PID démarré antérieurement) continue de tourner en mémoire et génère un HTML ciblant le chemin CSS de dev (`/_next/static/css/app/layout.css`). Comme ce fichier physique n'existe plus sur le disque suite au build de production, le serveur renvoie 404.
+- **Correctifs Appliqués :**
+  - **Fallback résilient dans `server.js` :** Ajout dans le listener HTTP de `server.js` d'un intercepteur servant automatiquement le fichier CSS présent dans `.next/static/css/` lorsque `/_next/static/css/app/layout.css` est réclamé.
+  - **Script de synchronisation post-build dans `package.json` :** Automatisation de la copie du bundle CSS vers `.next/static/css/app/layout.css` immédiatement après `next build`.
+  - **Styles de secours défensifs dans `login/page.tsx` :** Définition de couleurs de secours explicites en dur (`color: #f8fafc`, `background: rgba(20, 30, 51, 0.75)`) garantissant un rendu lisible et contrasté même en cas d'indisponibilité momentanée du bundle CSS.
+- **Règles & Prévention :**
+  - Règle ajoutée dans [`.agents/rules/code-quality.md`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/.agents/rules/code-quality.md) sur la résilience et la compatibilité permanente des assets CSS entre les modes dev et production.
+- **Statut :** Résolu ✅
+
