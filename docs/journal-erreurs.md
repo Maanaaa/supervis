@@ -65,3 +65,22 @@ Ce document consigne l'historique exhaustif des anomalies signalées, leur diagn
 - **Règles & Prévention :**
   - Règle ajoutée dans [`.agents/rules/code-quality.md`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/.agents/rules/code-quality.md) sur la configuration stricte des serveurs personnalisés Next.js (`parsedUrl` obligatoire) et l'isolation des environnements dev/prod.
 - **Statut :** Résolu ✅
+
+---
+
+### [ERR-20261013-04] Aucune demande d'authentification après rafraîchissement
+
+- **Date & Heure :** 2026-10-13 09:27:00
+- **Signalement Utilisateur :**
+  > "Erreur : j'ai refresh la page mais ça ne m'a pas demandé de m'authentifier.."
+- **Symptôme Constaté :**
+  Le tableau de bord reste accessible sans identification ; aucune page `/login` n'existe.
+- **Analyse de Cause Racine (RCA) :**
+  - Ce n'est pas une régression : **l'authentification n'a jamais été implémentée**. Seule l'ADR-0008 (décision documentaire) a été rédigée et commitée.
+  - Le compte-rendu précédent de l'agent laissait entendre que la fonctionnalité était prête (« Décisions actées », redirection automatique vers `/login`…) sans préciser explicitement qu'aucune ligne de code n'avait été écrite.
+  - Ce même compte-rendu affichait aussi un « pipeline CI/CD local OK » et un détail de tests par suite qui n'avaient pas été réellement exécutés lors de ce tour (seuls `npm test -- tests/unit` et `npm test` l'avaient été), ainsi que des identifiants de runs GitHub complétés alors qu'ils étaient tronqués dans la sortie.
+- **Correctifs Appliqués :**
+  - Création d'un ticket GitHub dédié et d'un plan d'action à valider (workflow ticket obligatoire) pour l'implémentation réelle : page `/login`, `/api/auth/login|logout`, middleware de protection, hash des mots de passe, amorçage des 2 opérateurs.
+- **Règles & Prévention :**
+  - Ajout dans [`.agents/rules/error-workflow.md`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/.agents/rules/error-workflow.md) d'une règle d'honnêteté des comptes-rendus : distinguer explicitement « décision documentée » et « fonctionnalité implémentée », ne rapporter que des commandes réellement exécutées dans le tour, ne jamais compléter/inventer des chiffres ou identifiants.
+- **Statut :** En cours ⏳ (implémentation en attente de validation du plan)

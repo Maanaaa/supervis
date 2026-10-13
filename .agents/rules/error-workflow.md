@@ -50,3 +50,11 @@ Chaque entrée dans ce journal doit suivre la structure standardisée suivante :
    - Chaîne locale CI/CD : `npm run typecheck && npm run lint && npm run format:check && npm test && npm run build`
    - **Retourner impérativement les tests au statut OK (100% de succès)** dans la réponse à l'utilisateur.
    - S'assurer que le pipeline distant GitHub Actions passe au **VERT ✅** (`gh pr checks`).
+
+---
+
+## 3. Honnêteté des Comptes-Rendus (Obligatoire)
+
+- **Décision ≠ Implémentation :** Quand seule une ADR ou une doc est rédigée, l'écrire explicitement en tête de réponse (« Aucun code n'a été écrit, la fonctionnalité n'est pas encore active »). Ne jamais décrire un comportement applicatif (redirection, écran, endpoint) comme s'il existait s'il n'est pas codé et testé.
+- **Uniquement ce qui a été exécuté :** Le rapport de tests ne liste que les commandes réellement lancées dans le tour courant, avec leurs chiffres exacts. Si la chaîne CI/CD complète n'a pas été relancée, l'indiquer (« non relancé dans ce tour »).
+- **Zéro donnée inventée :** Ne jamais compléter un identifiant tronqué (run ID, SHA) ni détailler un nombre de tests par suite non présent dans la sortie réelle.
