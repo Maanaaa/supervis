@@ -6,6 +6,11 @@ const dev = process.env.NODE_ENV !== 'production';
 const hostname = 'localhost';
 const port = parseInt(process.env.PORT || '3000', 10);
 
+// Fallback local pour développement si non défini
+if (!process.env.MONGODB_URI && dev) {
+  process.env.MONGODB_URI = 'mongodb://127.0.0.1:27017/supervis';
+}
+
 const app = next({ dev, hostname, port });
 const handle = app.getRequestHandler();
 
