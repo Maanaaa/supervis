@@ -18,13 +18,24 @@ Ces règles sont automatiquement chargées par Antigravity pour garantir l'excel
   - `hooks/` : logique réactive réutilisable (`useSocket.ts`).
   - `lib/` : code utilitaire serveur pur et singletons (`db.ts`, `socket.ts`, `poller.ts`).
   - `models/` : schémas Mongoose typés.
-- **Nomenclature conventionnelle** :
-  - Composants React : `PascalCase.tsx` (ex: `AlertCard.tsx`, `ServerList.tsx`).
-  - Fonctions, hooks, utilitaires : `camelCase.ts` (ex: `useSocket.ts`, `formatDate.ts`).
+- **Composants d'Erreur & Boundaries obligatoires (Anti-boucle infinie)** :
+  - Tout projet Next.js App Router **DOIT impérativement inclure dès l'initialisation** :
+    1. `src/app/error.tsx` : Error Boundary de segment racine (`'use client'` obligatoire, avec `{ error, reset }` et bouton de réessai).
+    2. `src/app/global-error.tsx` : Error Boundary global englobant `<html>` et `<body>` en cas de défaillance du Root Layout.
+    3. `src/app/not-found.tsx` : Gestion propre des erreurs 404.
+    4. `src/app/loading.tsx` : Skeleton / loader global assurant un feedback visuel instantané (<16ms) lors des transitions de pages sous React Suspense, empêchant la sensation de clic inactif.
+  - **Interdiction formelle d'omettre ces composants** : leur absence force Next.js à injecter `<pre>missing required error components, refreshing...</pre>` avec un script de rechargement en boucle infinie qui paralyse le navigateur en cas d'erreur ou d'incident réseau/BDD.
+- **Sécurisation des Hooks Clients** :
+  - `usePathname()` retourne `string | null` : toujours tester la vérité de la variable avant tout appel de méthode (`pathname ? pathname.startsWith(...) : false`) pour éviter tout crash d'hydratation React.
+- **Serveur Custom Next.js & Résolution d'Assets (`server.js`)** :
+  - Toujours analyser l'URL avec `parse(req.url, true)` et appeler `handle(req, res, parsedUrl)`. Ne jamais passer `handle(req, res)` brut sous peine de casser la distribution des fichiers statiques et CSS avec query string (`?v=...`), ce qui produit un rendu HTML brut sans aucun style (404 CSS).
+  - En mode développement (`dev`), purger automatiquement tout résidu de build de production dans `.next` (`BUILD_ID`) pour éviter les conflits de manifestes webpack et garantir la compilation CSS à chaud.
 
 ---
 
 ## 3. Robustesse & Concurrence en Base de Données
+- **Timeouts de connexion stricts** :
+  - Toujours spécifier `serverSelectionTimeoutMS: 3000` (ou inférieur) sur `mongoose.connect()`. Ne jamais laisser le timeout par défaut (30s) bloquer les rendus SSR ou les requêtes API en cas d'indisponibilité de la base.
 - **Verrouillage atomique conditionnel** :
   - Toute prise de ticket d'astreinte doit s'effectuer via une requête atomique conditionnelle (`findOneAndUpdate({ _id, status: 'OPEN' }, ...)`).
   - En cas de collision, renvoyer un statut HTTP 409 Conflict sans altérer les données existantes.

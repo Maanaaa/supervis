@@ -26,10 +26,14 @@ Dès que l'utilisateur demande de traiter un ticket (ex: *"Traite le ticket n°X
 1. **Plan d'action à valider :** Rédiger et soumettre à validation le plan d'action détaillé (découpage, fichiers ciblés, stratégie de test).
 2. **Branche de feature dédiée :** Créer une branche issue de `dev` nommée `feat/issue-X-<slug>` (`git checkout -b feat/issue-X-...`). Ne jamais coder directement sur `dev`.
 3. **Développement (Dev) :** Implémenter le code en respectant les standards de qualité (TypeScript strict, pas de `any`, modularité).
-4. **Tests automatisés (Unit / Fonc / E2E / Intégration) :** Rédiger et exécuter les tests (`npm test`, `npm run typecheck`, `npm run lint`, `npm run build`).
+4. **Tests automatisés & Validation CI/CD locale :**
+   - Tests unitaires : `npm test -- tests/unit`
+   - Tests complets : `npm test`
+   - Validation locale complète CI/CD : `npm run typecheck && npm run lint && npm run format:check && npm test && npm run build`
+   - **Obligation absolue :** Retourner **impérativement les tests au statut OK** (100% de succès) dans le compte-rendu.
 5. **Pull Request (PR) :** Commiter, pousser la branche de feature et ouvrir une PR vers `dev` (`gh pr create --base dev --head feat/issue-X-... --title "..." --body "..."`).
-6. **CI GitHub Actions Verte :** Attendre et surveiller le passage au **VERT ✅** de la CI déclenchée sur la PR (`gh pr checks` / `gh run watch`).
-7. **Comment tester :** Fournir le guide pas-à-pas pour tester et valider la fonctionnalité en local, puis clôturer le ticket après accord/merge.
+6. **CI/CD GitHub Actions Verte :** Attendre et surveiller le passage au **VERT ✅** de la CI déclenchée sur la PR (`gh pr checks` / `gh run watch`).
+7. **Comment tester & Rapport de validation :** Retourner impérativement les tests au statut **OK**, fournir le guide pas-à-pas pour tester et valider la fonctionnalité en local, puis clôturer le ticket après accord/merge.
 
 ### ⚠️ Règle d'or des ADRs (Immuabilité)
 - **Ne JAMAIS réécrire ou modifier une décision dans une ADR déjà acceptée.**
@@ -55,6 +59,8 @@ Dès que l'utilisateur demande de traiter un ticket (ex: *"Traite le ticket n°X
 
 | Document | Rôle pour l'IA |
 | :--- | :--- |
+| [`.agents/rules/error-workflow.md`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/.agents/rules/error-workflow.md) | Workflow obligatoire de traitement et documentation d'erreur. |
+| [`docs/journal-erreurs.md`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/docs/journal-erreurs.md) | Journal officiel des anomalies et résolutions techniques. |
 | [`.agents/rules/`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/.agents/rules/code-quality.md) | Règles d'excellence du code (TypeScript strict, concurrence, tests). |
 | [`docs/contexte.md`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/docs/contexte.md) | Comprendre le problème client, les enjeux d'astreinte et le fil conducteur. |
 | [`docs/adr/README.md`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/docs/adr/README.md) | Comprendre les arbitrages techniques fermes et les pièges évités. |

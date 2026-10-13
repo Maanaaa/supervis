@@ -1,7 +1,7 @@
 # ADR-0004 : Identification des membres d'astreinte (Annuaire d'opérateurs)
 
 - **Date :** 2026-10-12
-- **Statut :** Proposé (en cours d'affinage technique avec l'utilisateur)
+- **Statut :** Amendé par [ADR-0008](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/docs/adr/0008-authentification-operateurs-login.md)
 - **Décideurs :** Théo, Antigravity
 
 ---

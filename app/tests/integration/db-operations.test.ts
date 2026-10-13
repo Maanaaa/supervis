@@ -9,14 +9,21 @@ describe("Tests d'Intégration — Opérations BDD MongoDB en mémoire", () => {
   let mongoServer: MongoMemoryServer;
 
   beforeAll(async () => {
-    mongoServer = await MongoMemoryServer.create();
+    try {
+      mongoServer = await MongoMemoryServer.create();
+    } catch {
+      await new Promise((r) => setTimeout(r, 500));
+      mongoServer = await MongoMemoryServer.create();
+    }
     process.env.MONGODB_URI = mongoServer.getUri();
     await connectDB();
   }, 30000);
 
   afterAll(async () => {
     await disconnectDB();
-    await mongoServer.stop();
+    if (mongoServer) {
+      await mongoServer.stop();
+    }
   }, 30000);
 
   beforeEach(async () => {
