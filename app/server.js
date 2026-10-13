@@ -202,6 +202,24 @@ setupDatabase().then(() => {
 }).then(() => {
   const server = http.createServer((req, res) => {
     const parsedUrl = parse(req.url, true);
+
+    // Résilience CSS : si layout.css de dev est demandé mais que le build de prod a haché les assets
+    if (parsedUrl.pathname && parsedUrl.pathname.startsWith('/_next/static/css/app/')) {
+      const cssAppFile = path.join(__dirname, '.next', 'static', 'css', 'app', 'layout.css');
+      if (fs.existsSync(cssAppFile)) {
+        res.setHeader('Content-Type', 'text/css; charset=UTF-8');
+        return fs.createReadStream(cssAppFile).pipe(res);
+      }
+      const cssDir = path.join(__dirname, '.next', 'static', 'css');
+      if (fs.existsSync(cssDir)) {
+        const cssFiles = fs.readdirSync(cssDir).filter((f) => f.endsWith('.css'));
+        if (cssFiles.length > 0) {
+          res.setHeader('Content-Type', 'text/css; charset=UTF-8');
+          return fs.createReadStream(path.join(cssDir, cssFiles[0])).pipe(res);
+        }
+      }
+    }
+
     handle(req, res, parsedUrl);
   });
 

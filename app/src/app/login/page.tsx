@@ -48,7 +48,7 @@ export default function LoginPage() {
         try {
           localStorage.setItem('supervis_operator', data.user.name);
         } catch {
-          // LocalStorage inaccessible (mode navigation privée stricte)
+          // LocalStorage inaccessible
         }
       }
 
@@ -76,18 +76,20 @@ export default function LoginPage() {
         justifyContent: 'center',
         padding: '1.5rem',
         background: 'radial-gradient(ellipse at top, #1e1b4b 0%, #090d16 70%)',
+        fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+        color: '#f8fafc',
       }}
     >
       <div
         style={{
           width: '100%',
           maxWidth: '440px',
-          background: 'var(--bg-glass)',
+          background: 'var(--bg-glass, rgba(20, 30, 51, 0.75))',
           backdropFilter: 'blur(16px)',
           WebkitBackdropFilter: 'blur(16px)',
-          border: '1px solid var(--border-color)',
-          borderRadius: 'var(--radius-lg)',
-          boxShadow: 'var(--shadow-lg), var(--shadow-glow)',
+          border: '1px solid var(--border-color, #24344d)',
+          borderRadius: 'var(--radius-lg, 16px)',
+          boxShadow: 'var(--shadow-lg, 0 10px 30px rgba(0, 0, 0, 0.5))',
           padding: '2.5rem 2rem',
         }}
       >
@@ -100,11 +102,11 @@ export default function LoginPage() {
               justifyContent: 'center',
               width: '48px',
               height: '48px',
-              borderRadius: 'var(--radius-md)',
-              background: 'var(--accent-primary-glow)',
-              border: '1px solid var(--border-color)',
+              borderRadius: 'var(--radius-md, 10px)',
+              background: 'var(--accent-primary-glow, rgba(99, 102, 241, 0.25))',
+              border: '1px solid var(--border-color, #24344d)',
               marginBottom: '1rem',
-              color: 'var(--accent-primary)',
+              color: 'var(--accent-primary, #6366f1)',
             }}
           >
             <svg
@@ -125,13 +127,13 @@ export default function LoginPage() {
             style={{
               fontSize: '1.5rem',
               fontWeight: 700,
-              color: 'var(--text-primary)',
+              color: 'var(--text-primary, #f8fafc)',
               marginBottom: '0.5rem',
             }}
           >
             Console d&apos;Astreinte
           </h1>
-          <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+          <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary, #94a3b8)' }}>
             Identification requise pour la prise en charge des incidents (ADR-0008)
           </p>
         </div>
@@ -143,10 +145,10 @@ export default function LoginPage() {
             style={{
               marginBottom: '1.5rem',
               padding: '0.75rem 1rem',
-              background: 'var(--accent-critical-bg)',
-              border: '1px solid var(--accent-critical-border)',
-              borderRadius: 'var(--radius-sm)',
-              color: 'var(--accent-critical)',
+              background: 'var(--accent-critical-bg, rgba(244, 63, 94, 0.12))',
+              border: '1px solid var(--accent-critical-border, rgba(244, 63, 94, 0.35))',
+              borderRadius: 'var(--radius-sm, 6px)',
+              color: 'var(--accent-critical, #f43f5e)',
               fontSize: '0.875rem',
               display: 'flex',
               alignItems: 'center',
@@ -181,7 +183,7 @@ export default function LoginPage() {
                 display: 'block',
                 fontSize: '0.8125rem',
                 fontWeight: 600,
-                color: 'var(--text-secondary)',
+                color: 'var(--text-secondary, #94a3b8)',
                 marginBottom: '0.375rem',
               }}
             >
@@ -200,13 +202,13 @@ export default function LoginPage() {
               style={{
                 width: '100%',
                 padding: '0.75rem 1rem',
-                background: 'var(--bg-secondary)',
-                border: '1px solid var(--border-color)',
-                borderRadius: 'var(--radius-md)',
-                color: 'var(--text-primary)',
+                background: 'var(--bg-secondary, #0f172a)',
+                border: '1px solid var(--border-color, #24344d)',
+                borderRadius: 'var(--radius-md, 10px)',
+                color: 'var(--text-primary, #f8fafc)',
                 fontSize: '0.9375rem',
                 outline: 'none',
-                transition: 'border-color var(--transition-fast)',
+                boxSizing: 'border-box',
               }}
             />
           </div>
@@ -218,7 +220,7 @@ export default function LoginPage() {
                 display: 'block',
                 fontSize: '0.8125rem',
                 fontWeight: 600,
-                color: 'var(--text-secondary)',
+                color: 'var(--text-secondary, #94a3b8)',
                 marginBottom: '0.375rem',
               }}
             >
@@ -236,13 +238,13 @@ export default function LoginPage() {
               style={{
                 width: '100%',
                 padding: '0.75rem 1rem',
-                background: 'var(--bg-secondary)',
-                border: '1px solid var(--border-color)',
-                borderRadius: 'var(--radius-md)',
-                color: 'var(--text-primary)',
+                background: 'var(--bg-secondary, #0f172a)',
+                border: '1px solid var(--border-color, #24344d)',
+                borderRadius: 'var(--radius-md, 10px)',
+                color: 'var(--text-primary, #f8fafc)',
                 fontSize: '0.9375rem',
                 outline: 'none',
-                transition: 'border-color var(--transition-fast)',
+                boxSizing: 'border-box',
               }}
             />
           </div>
@@ -255,16 +257,15 @@ export default function LoginPage() {
               width: '100%',
               padding: '0.875rem',
               marginTop: '0.5rem',
-              background: 'var(--accent-primary)',
+              background: 'var(--accent-primary, #6366f1)',
               color: '#ffffff',
               border: 'none',
-              borderRadius: 'var(--radius-md)',
+              borderRadius: 'var(--radius-md, 10px)',
               fontSize: '0.9375rem',
               fontWeight: 600,
               cursor: isLoading ? 'not-allowed' : 'pointer',
               opacity: isLoading ? 0.7 : 1,
-              boxShadow: 'var(--shadow-glow)',
-              transition: 'background var(--transition-fast), transform var(--transition-fast)',
+              boxShadow: 'var(--shadow-glow, 0 0 25px rgba(99, 102, 241, 0.25))',
             }}
           >
             {isLoading ? 'Connexion en cours...' : 'Se connecter à l’astreinte'}
@@ -276,14 +277,20 @@ export default function LoginPage() {
           style={{
             marginTop: '2rem',
             paddingTop: '1.5rem',
-            borderTop: '1px solid var(--border-subtle)',
+            borderTop: '1px solid var(--border-subtle, rgba(255, 255, 255, 0.08))',
             fontSize: '0.8125rem',
-            color: 'var(--text-muted)',
+            color: 'var(--text-muted, #64748b)',
           }}
         >
-          <div style={{ marginBottom: '0.75rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
+          <div
+            style={{
+              marginBottom: '0.75rem',
+              fontWeight: 600,
+              color: 'var(--text-secondary, #94a3b8)',
+            }}
+          >
             Comptes d&apos;astreinte configurés (mot de passe :{' '}
-            <code style={{ color: 'var(--accent-warning)' }}>admin</code>) :
+            <code style={{ color: 'var(--accent-warning, #f59e0b)' }}>admin</code>) :
           </div>
           <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
             <button
@@ -291,10 +298,10 @@ export default function LoginPage() {
               onClick={() => handleQuickFill('Théo')}
               style={{
                 padding: '0.375rem 0.75rem',
-                background: 'var(--bg-secondary)',
-                border: '1px solid var(--border-color)',
-                borderRadius: 'var(--radius-sm)',
-                color: 'var(--text-primary)',
+                background: 'var(--bg-secondary, #0f172a)',
+                border: '1px solid var(--border-color, #24344d)',
+                borderRadius: 'var(--radius-sm, 6px)',
+                color: 'var(--text-primary, #f8fafc)',
                 fontSize: '0.75rem',
                 cursor: 'pointer',
               }}
@@ -306,10 +313,10 @@ export default function LoginPage() {
               onClick={() => handleQuickFill('Sarah')}
               style={{
                 padding: '0.375rem 0.75rem',
-                background: 'var(--bg-secondary)',
-                border: '1px solid var(--border-color)',
-                borderRadius: 'var(--radius-sm)',
-                color: 'var(--text-primary)',
+                background: 'var(--bg-secondary, #0f172a)',
+                border: '1px solid var(--border-color, #24344d)',
+                borderRadius: 'var(--radius-sm, 6px)',
+                color: 'var(--text-primary, #f8fafc)',
                 fontSize: '0.75rem',
                 cursor: 'pointer',
               }}

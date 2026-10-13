@@ -30,6 +30,7 @@ Ces règles sont automatiquement chargées par Antigravity pour garantir l'excel
 - **Serveur Custom Next.js & Résolution d'Assets (`server.js`)** :
   - Toujours analyser l'URL avec `parse(req.url, true)` et appeler `handle(req, res, parsedUrl)`. Ne jamais passer `handle(req, res)` brut sous peine de casser la distribution des fichiers statiques et CSS avec query string (`?v=...`), ce qui produit un rendu HTML brut sans aucun style (404 CSS).
   - En mode développement (`dev`), purger automatiquement tout résidu de build de production dans `.next` (`BUILD_ID`) pour éviter les conflits de manifestes webpack et garantir la compilation CSS à chaud.
+  - **Résilience permanente des Bundles CSS (Zéro 404 CSS)** : Dans `server.js`, implémenter un fallback interceptant `/_next/static/css/app/` pour servir le bundle CSS existant dans `.next/static/css/` si `layout.css` n'est pas encore compilé ou a été remplacé par un build de production. Le script `build` (`package.json`) doit synchroniser automatiquement les assets vers `.next/static/css/app/layout.css`. Les pages critiques (ex: `/login`) doivent intégrer des styles défensifs de secours en dur.
 
 ---
 
