@@ -155,6 +155,12 @@ Pour garantir la continuité de service et respecter ses engagements de disponib
     - `HistoryList` (`/history`) : Traçabilité des incidents résolus, post-mortem et calcul du MTTR moyen.
     - `ServerGrid` & `AddServerForm` (`/servers` et `/servers/[id]`) : Surveillance du parc, ajout sans rechargement et fiches détaillées avec historique lié.
   - Suite de 65 tests automatisés validée et build Next.js 100% au vert.
+- **Arbitrage n°8 (2026-10-13) — Authentification des opérateurs via formulaire de connexion (Amende ADR-0004) :**
+  - Validation de l'[ADR-0008](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/docs/adr/0008-authentification-operateurs-login.md) pour sécuriser l'accès et tracer nominalement chaque action d'astreinte.
+  - Formulaire de connexion dédié (`/login`) avec mot de passe par défaut fixé à `admin`.
+  - Validation des identifiants via l'API et la collection MongoDB `users`.
+  - Interdiction stricte de l'auto-inscription (pas de création libre de compte).
+  - Amorçage automatique des deux opérateurs de garde par défaut : Théo (`theo@supervis.local`) et Sarah (`sarah@supervis.local`).
 
 ---
 
