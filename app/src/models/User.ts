@@ -23,6 +23,10 @@ const UserSchema = new Schema<IUserDocument>(
       type: String,
       trim: true,
     },
+    password: {
+      type: String,
+      select: false,
+    },
     role: {
       type: String,
       enum: {

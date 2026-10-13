@@ -217,24 +217,46 @@ app/
 │   │   │   ├── ServerCard.tsx     # Statut UP/DOWN et latence
 │   │   │   └── AddServerForm.tsx  # Formulaire d'ajout
 │   │   └── layout/
-│   │       ├── Header.tsx         # Navbar et sélecteur d'opérateur actif
-│   │       └── Navigation.tsx     # Onglets Actives / Historique / Serveurs
+│   │       ├── Header.tsx         # Navbar, profil opérateur connecté et bouton Déconnexion
+│   │       └── Navigation.tsx     # Onglets Actives / Historique / Serveurs (masqué sur /login)
 │   │
 │   ├── hooks/                     # Custom Hooks React
-│   │   └── useSocket.ts           # Connexion et écouteurs Socket.IO
+│   │   ├── useSocket.ts           # Connexion et écouteurs Socket.IO
+│   │   └── useOperator.ts         # Profil opérateur connecté & déconnexion
 │   │
 │   ├── lib/                       # Singletons & Utilitaires backend
+│   │   ├── auth.ts                # Hash scrypt et ré-export de session
+│   │   ├── session.ts             # Jeton HMAC SHA-256 (Web Standards, Edge-compatible)
+│   │   ├── seed.ts                # Amorçage idempotent des 2 opérateurs par défaut
 │   │   ├── db.ts                  # Connexion Mongoose (cached connection)
 │   │   ├── socket.ts              # Singleton getIO() / setIO()
 │   │   └── poller.ts              # Boucle de sonde séquentielle (5 min)
 │   │
+│   ├── middleware.ts              # Protection des routes et redirection /login
+│   │
 │   ├── models/                    # Schémas Mongoose
 │   │   ├── Alert.ts
 │   │   ├── Server.ts
-│   │   └── User.ts
+│   │   └── User.ts                # Champ password sécurisé (select: false)
 │   │
 │   └── types/                     # Interfaces TypeScript
 │       ├── alert.ts
 │       ├── server.ts
-│       └── user.ts
+│       └── user.ts                # IUser, UserRole, ISessionPayload
 ```
+
+---
+
+## 8. Authentification & Contrôle d'Accès (ADR-0008)
+
+1. **Identification par Formulaire (`/login`) :**
+   - Accès nominal par identifiant (Nom ou Email) et mot de passe.
+   - Mot de passe par défaut : `admin`.
+   - Cookie de session HttpOnly `supervis_session` signé via HMAC-SHA256 (Web Standards).
+2. **Protection des Routes (`middleware.ts`) :**
+   - Redirection automatique vers `/login` pour tout accès non authentifié aux pages de supervision (`/`, `/history`, `/servers`).
+   - Réponses `401 Unauthorized` pour les appels API protégés sans session.
+   - Exemptions publiques : `/login`, `/api/auth/*`, `/api/health`, `/api/poller`.
+3. **Verrouillage de l'Inscription Libre :**
+   - `POST /api/users` retourne systématiquement `403 Forbidden`.
+   - Seuls les opérateurs d'astreinte pré-configurés (`Théo` ADMIN, `Sarah` ASTREINTE) ont accès à l'outil.

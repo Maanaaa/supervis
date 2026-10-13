@@ -122,8 +122,8 @@ describe('Functional Tests — API Routes Serveurs & Utilisateurs (/api/servers,
     });
   });
 
-  describe('GET & POST /api/users (Annuaire Techniciens)', () => {
-    it('doit créer un technicien et lister l’annuaire', async () => {
+  describe('GET & POST /api/users (Annuaire Techniciens & Protection ADR-0008)', () => {
+    it('doit refuser la création libre (403) et permettre la consultation de l’annuaire', async () => {
       const createReq = new Request('http://localhost:3000/api/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -136,8 +136,16 @@ describe('Functional Tests — API Routes Serveurs & Utilisateurs (/api/servers,
         }),
       });
 
-      const createRes = await postUser(createReq);
-      expect(createRes.status).toBe(201);
+      const createRes = await postUser();
+      expect(createRes.status).toBe(403);
+
+      await User.create({
+        name: 'Sarah L.',
+        email: 'sarah@supervis.local',
+        phone: '+33600000000',
+        role: 'ASTREINTE',
+        isOnDuty: true,
+      });
 
       const listRes = await getUsers();
       expect(listRes.status).toBe(200);

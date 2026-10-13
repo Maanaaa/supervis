@@ -7,6 +7,10 @@ import { usePathname } from 'next/navigation';
 export function Navigation() {
   const pathname = usePathname();
 
+  if (pathname === '/login') {
+    return null;
+  }
+
   const links = [
     { href: '/', label: '🚨 Alertes Actives', id: 'nav-alerts' },
     { href: '/history', label: '📜 Historique & MTTR', id: 'nav-history' },
