@@ -57,6 +57,7 @@ Ces règles sont automatiquement chargées par Antigravity pour garantir l'excel
 - **Validation serveur stricte par session signée :** Toute action sensible modifiant l'état d'un incident (`ACK`, `TRANSFER`, `RESOLVE`) doit impérativement dériver et valider l'identité de l'opérateur depuis le cookie de session HttpOnly signé (`supervis_session` via `verifySessionToken`).
 - **Anti-usurpation (BOLA / Impersonation) :** Si un utilisateur authentifié transmet un payload prétendant agir sous le nom d'un autre opérateur, l'API DOIT rejeter la requête avec un code HTTP `403 Forbidden`.
 - **Intégrité côté client :** L'identité affichée dans l'interface utilisateur provient obligatoirement du profil de session actif (`/api/auth/me`) et ne doit en aucun cas pouvoir être falsifiée via `localStorage` ou la console du navigateur.
+- **Skill de Sécurité Web Universel :** Appliquer impérativement les règles du skill [`web-security`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/.agents/skills/web-security/SKILL.md) sur l'ensemble des endpoints et flux de données (RBAC en profondeur, protection des routes de debug/chaos, WebSockets authentifiés, anti-SSRF, rate limiting, secrets).
 
 ---
 

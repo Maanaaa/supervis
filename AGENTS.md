@@ -23,6 +23,7 @@ Avant toute modification, consulter :
 
 ### 🛠️ Skills à la demande (`.agents/skills/`)
 Consulter le runbook dédié selon l'action :
+- **`web-security`** : Sécurité web universelle (anti-BOLA/IDOR, RBAC en profondeur, protection debug/chaos, WebSockets sécurisés, anti-SSRF, rate limiting, secrets).
 - **`adr-authoring`** : Création/amendement d'ADR (template strict, MAJ index, zéro test pour doc pure).
 - **`ticket-lifecycle`** : Implémentation d'issue (branche `feat/issue-X-...`, tests 100% OK, PR vers `dev`, suivi CI).
 - **`commit-crafting`** : Messages courts (≤ 50 car.), puces concrètes, référence ticket (`#X`), output minimal.

@@ -23,7 +23,6 @@ async function getAuthenticatedUser(request: Request) {
       if (match) token = decodeURIComponent(match[1]);
     }
   }
-
   return token ? await verifySessionToken(token) : null;
 }
 
