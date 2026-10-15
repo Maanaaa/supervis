@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import mongoose from 'mongoose';
 import { connectDB } from '@/lib/db';
 import { Alert } from '@/models/Alert';
 import { emitSocket } from '@/lib/socket';
@@ -89,6 +90,13 @@ export async function POST(request: Request) {
           success: false,
           error: `Sévérité invalide. Valeurs acceptées : ${validSeverities.join(', ')}`,
         },
+        { status: 400 }
+      );
+    }
+
+    if (serverId && !mongoose.Types.ObjectId.isValid(serverId)) {
+      return NextResponse.json(
+        { success: false, error: 'Identifiant serverId invalide.' },
         { status: 400 }
       );
     }
