@@ -7,6 +7,7 @@ import { useSocket } from '@/hooks/useSocket';
 import { useOperator } from '@/hooks/useOperator';
 import { AlertCard } from './AlertCard';
 import { MetricBanner } from '../layout/MetricBanner';
+import { SimulationPanel } from './SimulationPanel';
 
 interface AlertListProps {
   initialAlerts: IAlert[];
@@ -82,6 +83,9 @@ export function AlertList({ initialAlerts, initialServers = [] }: AlertListProps
 
   return (
     <div id="alert-list-container">
+      {/* Panneau de simulation et de chaos testing */}
+      <SimulationPanel />
+
       {/* Bannière de compteurs réactifs */}
       <MetricBanner alerts={alerts} servers={servers} />
 

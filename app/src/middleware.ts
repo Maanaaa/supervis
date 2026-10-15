@@ -10,6 +10,7 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/api/auth/') ||
     pathname === '/api/health' ||
     pathname === '/api/poller' ||
+    pathname.startsWith('/api/simulator') ||
     pathname.startsWith('/_next') ||
     pathname.includes('.') || // Fichiers statiques (favicon, robots, css, png...)
     pathname === '/favicon.ico';
