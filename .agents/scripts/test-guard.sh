@@ -24,13 +24,13 @@ if [ -z "$HAS_APP_CHANGES" ]; then
   exit 0
 fi
 
-# Du code applicatif a été modifié : exécuter la suite de tests Jest
+# Du code applicatif a été modifié : exécuter typecheck et Jest
 if [ -d "$APP_DIR" ]; then
-  TEST_OUTPUT=$(cd "$APP_DIR" && npm test 2>&1)
+  TEST_OUTPUT=$(cd "$APP_DIR" && npm run typecheck && npm test 2>&1)
   TEST_STATUS=$?
 
   if [ $TEST_STATUS -ne 0 ]; then
-    REASON="Garde-fou Stop : Les tests Jest échouent dans app/. Vous devez impérativement corriger le code et obtenir 100% de succès avant de rendre la main."
+    REASON="Garde-fou Stop : Échec de validation dans app/ (typecheck TypeScript ou tests Jest). Vous devez impérativement corriger le code et obtenir 100% de succès avant de clore le tour."
     jq -n --arg reason "$REASON" '{"decision": "continue", "reason": $reason}'
     exit 0
   fi
