@@ -1,7 +1,7 @@
 # ADR-0007 : Gouvernance de la qualité de code et règles d'agent (.agents/rules/ & AGENTS.md)
 
 - **Date :** 2026-10-12
-- **Statut :** Accepté
+- **Statut :** Amendé par ADR-0009
 - **Décideurs :** Théo, Antigravity
 
 ---
