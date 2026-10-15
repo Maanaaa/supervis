@@ -1,9 +1,31 @@
 import { NextResponse } from 'next/server';
 import mongoose from 'mongoose';
+import { cookies } from 'next/headers';
 import { connectDB } from '@/lib/db';
 import { Server } from '@/models/Server';
 import { Alert } from '@/models/Alert';
 import { emitSocket } from '@/lib/socket';
+import { verifySessionToken, SESSION_COOKIE_NAME } from '@/lib/session';
+
+async function getAuthenticatedUser(request: Request) {
+  let token: string | undefined;
+  try {
+    const cookieStore = cookies();
+    token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+  } catch {
+    // Hors contexte App Router
+  }
+
+  if (!token) {
+    const cookieHeader = request.headers.get('cookie');
+    if (cookieHeader) {
+      const match = cookieHeader.match(new RegExp(`(?:^|;\\s*)${SESSION_COOKIE_NAME}=([^;]*)`));
+      if (match) token = decodeURIComponent(match[1]);
+    }
+  }
+
+  return token ? await verifySessionToken(token) : null;
+}
 
 export async function GET(_request: Request, { params }: { params: { id: string } }) {
   try {
@@ -48,6 +70,17 @@ export async function DELETE(_request: Request, { params }: { params: { id: stri
       return NextResponse.json(
         { success: false, error: 'Identifiant de serveur invalide.' },
         { status: 400 }
+      );
+    }
+
+    const user = await getAuthenticatedUser(_request);
+    if (user && user.role !== 'ADMIN') {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Accès refusé : la suppression d’une machine est réservée aux administrateurs.',
+        },
+        { status: 403 }
       );
     }
 

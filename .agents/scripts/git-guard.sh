@@ -60,6 +60,23 @@ if echo "$CMD" | grep -Eq 'gh +pr +create\b'; then
   fi
 fi
 
+# 7. Vérification commit direct sur main ou dev
+if echo "$CMD" | grep -Eq 'git +commit\b'; then
+  CURRENT_BRANCH=$(git branch --show-current 2>/dev/null || echo "")
+  if [ "$CURRENT_BRANCH" = "main" ] || [ "$CURRENT_BRANCH" = "dev" ]; then
+    REASON="Commit direct interdit sur la branche $CURRENT_BRANCH. Basculez impérativement sur une branche dédiée (ex: git checkout -b feat/issue-X-... ou fix/...) avant de commiter."
+    jq -n --arg reason "$REASON" '{"decision": "deny", "reason": $reason}'
+    exit 0
+  fi
+fi
+
+# 8. Vérification git clean destructif
+if echo "$CMD" | grep -Eq 'git +clean +.*-f'; then
+  REASON="git clean -f est bloqué par précaution pour éviter la suppression accidentelle de nouveaux fichiers non suivis."
+  jq -n --arg reason "$REASON" '{"decision": "deny", "reason": $reason}'
+  exit 0
+fi
+
 # Par défaut, autorisé
 echo '{"decision": "allow"}'
 exit 0

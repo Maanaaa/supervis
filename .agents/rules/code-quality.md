@@ -57,3 +57,45 @@ Ces règles sont automatiquement chargées par Antigravity pour garantir l'excel
 - **Validation serveur stricte par session signée :** Toute action sensible modifiant l'état d'un incident (`ACK`, `TRANSFER`, `RESOLVE`) doit impérativement dériver et valider l'identité de l'opérateur depuis le cookie de session HttpOnly signé (`supervis_session` via `verifySessionToken`).
 - **Anti-usurpation (BOLA / Impersonation) :** Si un utilisateur authentifié transmet un payload prétendant agir sous le nom d'un autre opérateur, l'API DOIT rejeter la requête avec un code HTTP `403 Forbidden`.
 - **Intégrité côté client :** L'identité affichée dans l'interface utilisateur provient obligatoirement du profil de session actif (`/api/auth/me`) et ne doit en aucun cas pouvoir être falsifiée via `localStorage` ou la console du navigateur.
+
+---
+
+## 6. Architecture CSS & Proscription de l'Inline Styling Massif
+- **Proscription de l'inline style sprawl :** Ne JAMAIS injecter des blocs de 15 à 30 propriétés CSS via `style={{ ... }}` dans le JSX pour compenser la flemme d'éditer `globals.css` ou les modules CSS.
+  - L'usage de `style={{}}` est **strictement réservé aux valeurs dynamiques pures calculées au runtime** (ex: `style={{ width: `${pct}%`, backgroundColor: dynamicColor }}`).
+  - Toute structure de mise en page (flexbox, grid, marges, typographies, cards) doit être déclarée dans `src/app/globals.css` sous forme de classes sémantiques ou utilitaires réutilisables.
+- **Cohérence des Variables CSS :** Toujours réutiliser les tokens du design system (`var(--bg-card)`, `var(--text-primary)`, `var(--radius-md)`, `var(--accent-primary)`).
+
+---
+
+## 7. RBAC & Défense en Profondeur (Defense-in-Depth)
+- **Ne jamais se reposer uniquement sur `middleware.ts` :** Le middleware valide la présence d'une session (authentification), mais les Route Handlers doivent valider les autorisations spécifiques (RBAC).
+- **Contrôle de Rôle Granulaire :** Toute opération destructive ou d'administration (`DELETE /api/servers/[id]`, modification de privilèges) doit impérativement extraire l'utilisateur et vérifier son rôle :
+  ```typescript
+  const user = await getAuthenticatedUser(request);
+  if (user && user.role !== 'ADMIN') {
+    return NextResponse.json({ success: false, error: 'Accès réservé aux administrateurs.' }, { status: 403 });
+  }
+  ```
+- **Gestion Stricte des Secrets d'Environnement :** En production (`NODE_ENV === 'production'`), aucune variable critique (`SESSION_SECRET`, tokens d'API) ne doit utiliser de fallback en clair dans le code sans déclencher un avertissement critique ou une exception bloquante.
+
+---
+
+## 8. Contrat d'Enveloppe API REST Uniforme
+- Toutes les routes API sous `/api/` doivent respecter une convention de réponse uniforme et prévisible :
+  - **Succès (200, 201) :**
+    ```json
+    { "success": true, ...données }
+    ```
+  - **Erreur (400, 401, 403, 404, 409, 500) :**
+    ```json
+    { "success": false, "error": "Message explicatif en français clair." }
+    ```
+- Interdiction de renvoyer tantôt `{ error: ... }`, tantôt `{ message: ... }`, tantôt du texte brut.
+
+---
+
+## 9. DRY & Zéro Duplication de Logique Métier
+- Toute logique métier partagée (hachage de mot de passe, schémas de validation, utilitaires de formatage) doit résider dans un unique emplacement source sous `src/lib/`.
+- `server.js` (CommonJS) et l'App Router (ESM) doivent importer ou partager la même source de vérité plutôt que de copier/coller des fonctions identiques.
+

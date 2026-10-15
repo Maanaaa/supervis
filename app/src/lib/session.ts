@@ -1,8 +1,17 @@
 import type { ISessionPayload } from '@/types/user';
 
 export const SESSION_COOKIE_NAME = 'supervis_session';
-const SESSION_SECRET =
-  process.env.SESSION_SECRET || 'supervis-default-jwt-secret-key-at-least-32-characters-long';
+const DEFAULT_SECRET = 'supervis-default-jwt-secret-key-at-least-32-characters-long';
+const SESSION_SECRET = process.env.SESSION_SECRET || DEFAULT_SECRET;
+
+if (
+  process.env.NODE_ENV === 'production' &&
+  (!process.env.SESSION_SECRET || process.env.SESSION_SECRET === DEFAULT_SECRET)
+) {
+  console.warn(
+    '[SECURITY WARNING] SESSION_SECRET utilise la clé par défaut ou n’est pas défini en production !'
+  );
+}
 const SESSION_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000; // 7 jours
 
 export interface ISessionData extends ISessionPayload {

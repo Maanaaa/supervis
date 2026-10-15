@@ -162,4 +162,33 @@ Ce document consigne l'historique exhaustif des anomalies signalées, leur diagn
   - Directive cardinale de sécurité inscrite dans [`AGENTS.md`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/AGENTS.md).
 - **Statut :** Résolu ✅
 
+---
+
+### [ERR-20261015-08] Audit Développeur Senior : Omission RBAC sur suppression, Garde-fous Stop partiels et Inline Styling massif
+
+- **Date & Heure :** 2026-10-15 15:10:00
+- **Signalement Utilisateur :**
+  > "Ton audit n'est pas complet. Place toi comme un vrai développeur et regarde les erreurs qui ont étés faites, également en terme de conventions etc... Et adapte les hooks, les rules, les scripts..."
+- **Symptôme Constaté :**
+  1. `DELETE /api/servers/[id]` n'effectuait aucune vérification de rôle (`ADMIN`), permettant à n'importe quel compte ou requête de détruire des machines.
+  2. Le hook Stop `test-guard.sh` n'exécutait que `npm test`, laissant passer des erreurs de typage TypeScript (`tsc --noEmit`) ou de linting ESLint dans les fichiers non testés.
+  3. `git-guard.sh` ne bloquait pas les commits directs exécutés sur les branches `dev` ou `main`.
+  4. Les composants React (`AlertCard.tsx`, `AddServerForm.tsx`) contenaient des dizaines de styles inline massifs (`style={{ ... }}`) au lieu de classes CSS réutilisables dans `globals.css`.
+  5. Absence de warning en production en cas d'utilisation du fallback secret `SESSION_SECRET`.
+- **Analyse de Cause Racine (RCA) :**
+  - **Biais de localité de l'IA :** Les LLMs ont tendance à concentrer le style dans les balises JSX pour s'éviter d'ouvrir et modifier `globals.css` (sprawl CSS inline).
+  - **Confusion Authentification vs Autorisation :** L'IA considérait qu'un middleware vérifiant la session suffisait, ignorant la défense en profondeur et le contrôle granulaire de rôle (RBAC) au niveau du Route Handler.
+  - **Garde-fous incomplets :** Un test Jest vert ne garantit pas la validité du typage global TypeScript de l'App Router.
+- **Correctifs Appliqués :**
+  - **Vérification RBAC dans [`app/src/app/api/servers/[id]/route.ts`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/app/src/app/api/servers/%5Bid%5D/route.ts) :** Blocage 403 Forbidden si l'utilisateur connecté n'a pas le rôle `ADMIN`.
+  - **Sécurisation de `SESSION_SECRET` dans [`app/src/lib/session.ts`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/app/src/lib/session.ts) :** Alerte de sécurité critique en production si la clé par défaut est employée.
+  - **Durcissement de [`test-guard.sh`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/.agents/scripts/test-guard.sh) :** Exécution systématique de `npm run typecheck && npm test` avant toute autorisation de sortie.
+  - **Durcissement de [`git-guard.sh`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/.agents/scripts/git-guard.sh) :** Interdiction des commandes `git commit` directes sur `main` ou `dev`, et blocage des commandes destructives `git clean -f`.
+  - **Formalisation des règles dans [`.agents/rules/code-quality.md`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/.agents/rules/code-quality.md) :** Sections 6 à 9 (Proscription de l'inline styling massif, RBAC & Défense en profondeur, Contrat d'enveloppe API REST, DRY).
+- **Règles & Prévention :**
+  - Garde-fous mécaniques pré- et post-outils actifs.
+  - Documentation de référence mise à jour dans l'artifact d'audit.
+- **Statut :** Résolu ✅
+
+
 
