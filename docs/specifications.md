@@ -207,12 +207,14 @@ app/
 │   │   └── api/                   # Route Handlers REST
 │   │       ├── alerts/route.ts    # GET (actives) / POST (push webhook)
 │   │       ├── alerts/[id]/route.ts # PATCH (ACK atomique, RESOLVE, TRANSFER)
+│   │       ├── simulator/trigger/route.ts # POST / GET (simulateur de pannes)
 │   │       └── servers/route.ts   # GET / POST (création serveur)
 │   │
 │   ├── components/                # Composants (PascalCase, RSC par défaut)
 │   │   ├── alerts/
 │   │   │   ├── AlertCard.tsx      # Carte d'alerte interactive ('use client')
-│   │   │   └── AlertList.tsx      # Liste temps réel synchronisée ('use client')
+│   │   │   ├── AlertList.tsx      # Liste temps réel synchronisée ('use client')
+│   │   │   └── SimulationPanel.tsx # Panneau démo & injection de pannes ('use client')
 │   │   ├── servers/
 │   │   │   ├── ServerCard.tsx     # Statut UP/DOWN et latence
 │   │   │   └── AddServerForm.tsx  # Formulaire d'ajout
@@ -256,7 +258,23 @@ app/
 2. **Protection des Routes (`middleware.ts`) :**
    - Redirection automatique vers `/login` pour tout accès non authentifié aux pages de supervision (`/`, `/history`, `/servers`).
    - Réponses `401 Unauthorized` pour les appels API protégés sans session.
-   - Exemptions publiques : `/login`, `/api/auth/*`, `/api/health`, `/api/poller`.
+   - Exemptions publiques : `/login`, `/api/auth/*`, `/api/health`, `/api/poller`, `/api/simulator/*`.
 3. **Verrouillage de l'Inscription Libre :**
    - `POST /api/users` retourne systématiquement `403 Forbidden`.
    - Seuls les opérateurs d'astreinte pré-configurés (`Théo` ADMIN, `Sarah` ASTREINTE) ont accès à l'outil.
+
+---
+
+## 9. Simulateur de Pannes & Outil de Validation (Chaos Testing)
+
+1. **Endpoint `POST /api/simulator/trigger` :**
+   - Injection instantanée d'alertes fictives (`cpu`, `disk`, `nginx`, `custom`).
+   - Bascule immédiate de l'état d'un serveur (`server_down`, `server_up`).
+   - Réinitialisation complète (`reset`) pour remise à zéro des incidents de démonstration.
+   - Diffusion en direct via `emitSocket('alert:new', ...)` et `emitSocket('server:status_change', ...)` (< 100 ms).
+2. **Panneau Démo Côté Interface (`SimulationPanel.tsx`) :**
+   - Boutons dédiés : « Déclencher panne CPU », « Simuler serveur injoignable », « Réinitialiser ».
+   - Badge temps réel et compteur de latence d'émission.
+3. **Script Autonome CLI :**
+   - Commande `npm run simulate` (script `scripts/simulate.mjs`) pour dérouler un scénario complet automatisé en local.
+

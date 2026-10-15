@@ -10,7 +10,8 @@
     "lint": "next lint",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css}\" \"tests/**/*.{ts,tsx,js,jsx}\"",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css}\" \"tests/**/*.{ts,tsx,js,jsx}\"",
-    "test": "jest --runInBand"
+    "test": "jest --runInBand",
+    "simulate": "node scripts/simulate.mjs"
   },
   "dependencies": {
     "mongoose": "^8.8.4",
