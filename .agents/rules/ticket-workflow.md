@@ -29,7 +29,9 @@ Cette règle est contraignante et prioritaire. À chaque fois que l'utilisateur 
    - **Exclusion formelle pour les ADRs / docs :** Si une tâche ou un ticket concerne uniquement la rédaction d'une ADR ou de la documentation sans toucher au code applicatif, **retirer et ne jamais afficher de tests**.
    - Interdiction de soumettre une PR si un seul test ou check échoue.
 
-5. **Pull Request (PR) vers `dev` :**
+5. **Pull Request (PR) atomique vers `dev` :**
+   - **Taille de PR plafonnée :** Le diff total d'une PR doit impérativement être ≤ 800 lignes (idéalement 200 à 500 lignes). Interdiction absolue des PRs fleuves (> 1000 lignes ou 17 000 lignes) qui empêchent toute revue de code humaine. Découper systématiquement en sous-tickets.
+   - **Branche cible obligatoire :** Toujours cibler `--base dev`. L'ouverture de PR vers `main` est formellement bloquée par le garde-fou Git.
    - Commiter avec des messages conventionnels (`feat(...)`, `fix(...)`, `test(...)`) référençant `#X`.
    - Pousser la branche de feature : `git push origin feat/issue-X-<slug>`.
    - Créer la Pull Request vers `dev` via GitHub CLI :

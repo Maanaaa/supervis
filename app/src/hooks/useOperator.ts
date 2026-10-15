@@ -24,7 +24,7 @@ export function useOperator() {
     }
   }, []);
 
-  // Synchronisation avec la session active (/api/auth/me)
+  // Synchronisation stricte avec la session active (/api/auth/me)
   useEffect(() => {
     let isMounted = true;
 
@@ -36,11 +36,6 @@ export function useOperator() {
           if (isMounted && data.user) {
             setSessionUser(data.user);
             setOperator(data.user.name);
-            try {
-              localStorage.setItem(STORAGE_KEY, data.user.name);
-            } catch {
-              // Ignorer
-            }
           }
         }
       } catch {
@@ -82,15 +77,17 @@ export function useOperator() {
     };
   }, []);
 
+  // Interdiction formelle de changer d'opérateur sans réauthentification
   const changeOperator = (newOperator: string) => {
+    if (sessionUser) {
+      console.warn(
+        `[Security] Impossible de modifier l'opérateur en cours de session. Identité verrouillée sur ${sessionUser.name}.`
+      );
+      return;
+    }
     const cleanName = newOperator.trim();
     if (cleanName) {
       setOperator(cleanName);
-      try {
-        localStorage.setItem(STORAGE_KEY, cleanName);
-      } catch {
-        // Ignorer
-      }
     }
   };
 

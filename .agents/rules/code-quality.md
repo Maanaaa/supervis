@@ -49,3 +49,11 @@ Ces règles sont automatiquement chargées par Antigravity pour garantir l'excel
 ## 4. Esthétique & Expérience Utilisateur (UI/UX)
 - Interface de type **tableau de bord de monitoring d'infrastructure moderne** (thème sombre, lisibilité maximale de nuit, badges de statut nets, animations subtiles non intrusives).
 - **Zéro pop-up bloquante** pour les prises de ticket : feedback visuel instantané et discret dans la liste.
+
+---
+
+## 5. Sécurité, Autorisation & Contrôle d'Accès Backend (Zéro Confiance Client)
+- **Zéro confiance dans les payloads clients :** Ne JAMAIS faire confiance aux champs d'identité envoyés dans le corps JSON des requêtes (`operator`, `currentOperator`, `userId`).
+- **Validation serveur stricte par session signée :** Toute action sensible modifiant l'état d'un incident (`ACK`, `TRANSFER`, `RESOLVE`) doit impérativement dériver et valider l'identité de l'opérateur depuis le cookie de session HttpOnly signé (`supervis_session` via `verifySessionToken`).
+- **Anti-usurpation (BOLA / Impersonation) :** Si un utilisateur authentifié transmet un payload prétendant agir sous le nom d'un autre opérateur, l'API DOIT rejeter la requête avec un code HTTP `403 Forbidden`.
+- **Intégrité côté client :** L'identité affichée dans l'interface utilisateur provient obligatoirement du profil de session actif (`/api/auth/me`) et ne doit en aucun cas pouvoir être falsifiée via `localStorage` ou la console du navigateur.
