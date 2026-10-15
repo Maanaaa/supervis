@@ -35,11 +35,11 @@ Garde-fous exécutés automatiquement par le runtime :
 
 ---
 
-## 3. Règles d'Architecture
+## 3. Règles d'Architecture & Sécurité
 - **Stack :** Next.js 14 (App Router), MongoDB (Mongoose), Socket.IO (`server.js`).
-- **Qualité :** TypeScript strict, aucun `any`, RSC prioritaires (`'use client'` réservé à Socket.IO/formulaires).
+- **Qualité & Sécurité :** TypeScript strict, aucun `any`, RSC prioritaires. Zéro confiance client : toute assignation ou transfert vérifie impérativement la session signée (`verifySessionToken`). Toute tentative d'usurpation = `403 Forbidden`.
 - **Concurrence atomique :** Toujours `findOneAndUpdate({ _id, status: 'OPEN' }, ...)` sans fenêtre temporelle.
-- **Branches :** Branche de référence `dev`. Toujours développer sur `feat/issue-X-<slug>` et ouvrir une PR.
+- **Branches & PRs atomiques :** Branche de référence `dev`. Toujours développer sur `feat/issue-X-<slug>` et ouvrir une PR vers `dev` (jamais `main`). PRs strictement plafonnées à ≤ 800 lignes (interdiction des PRs fleuves).
 
 ---
 

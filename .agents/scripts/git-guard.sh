@@ -41,6 +41,25 @@ if echo "$CMD" | grep -Eq 'git +reset +--hard\b'; then
   exit 0
 fi
 
+# 5. Vérification création de PR vers main
+if echo "$CMD" | grep -Eq 'gh +pr +create +.*--base +(origin/)?main\b'; then
+  REASON="Création de PR vers 'main' formellement interdite. Toutes les Pull Requests doivent impérativement cibler la branche 'dev' (--base dev)."
+  jq -n --arg reason "$REASON" '{"decision": "deny", "reason": $reason}'
+  exit 0
+fi
+
+# 6. Vérification de la taille de la Pull Request (Anti-PR fleuve de 17 000 lignes)
+if echo "$CMD" | grep -Eq 'gh +pr +create\b'; then
+  BASE_BRANCH="dev"
+  DIFF_LINES=$(git diff --shortstat "$BASE_BRANCH"...HEAD 2>/dev/null | awk '{for(i=1;i<=NF;i++) if($i ~ /insertion|deletion/) sum+=$(i-1)} END {print sum+0}')
+  MAX_PR_LINES=800
+  if [ -n "$DIFF_LINES" ] && [ "$DIFF_LINES" -gt "$MAX_PR_LINES" ]; then
+    REASON="PR fleuve rejetée : $DIFF_LINES lignes modifiées détectées par rapport à $BASE_BRANCH (limite maximale autorisée : $MAX_PR_LINES lignes). Découpez l'implémentation en tickets atomiques pour préserver la revue de code."
+    jq -n --arg reason "$REASON" '{"decision": "deny", "reason": $reason}'
+    exit 0
+  fi
+fi
+
 # Par défaut, autorisé
 echo '{"decision": "allow"}'
 exit 0

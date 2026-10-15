@@ -106,3 +106,60 @@ Ce document consigne l'historique exhaustif des anomalies signalées, leur diagn
   - Règle ajoutée dans [`.agents/rules/code-quality.md`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/.agents/rules/code-quality.md) sur la résilience et la compatibilité permanente des assets CSS entre les modes dev et production.
 - **Statut :** Résolu ✅
 
+---
+
+### [ERR-20261015-06] Pull Request fleuve de 17 417 lignes ouverte vers main (Absence de contrôle de taille et de branche cible)
+
+- **Date & Heure :** 2026-10-15 14:30:00
+- **Signalement Utilisateur :**
+  > "L'IA m'a fait un PR à 17 000 lignes, ce qui est évidemment beaucoup trop, ceci ne doit plus se reproduire."
+- **Symptôme Constaté :**
+  La PR #11 (`feat/issue-10-auth-login`) a été ouverte directement vers la branche `main` au lieu de `dev`, embarquant 34 commits et un diff gigantesque de +17 417 lignes (incluant l'intégralité du projet et les fichiers générés), rendant toute revue humaine impossible.
+- **Analyse de Cause Racine (RCA) :**
+  1. **Cible incorrecte de la commande `gh pr create` :** L'agent a omis de spécifier ou a ciblé `--base main` au lieu de `--base dev`.
+  2. **Absence de garde-fou mécanique de taille de diff :** Aucun script de hook ne mesurait le volume de lignes modifiées (`git diff --shortstat`) avant la création effective de la Pull Request.
+  3. **Absence de directive explicite d'atomicité des PRs :** Les consignes n'imposaient pas de plafond strict en nombre de lignes par PR.
+- **Correctifs Appliqués :**
+  - **Mise à jour du hook de sécurité Git ([`.agents/scripts/git-guard.sh`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/.agents/scripts/git-guard.sh)) :**
+    - Blocage strict de toute commande `gh pr create` ciblant `main`.
+    - Calcul automatique du volume de lignes modifiées : rejet immédiat (`decision: deny`) de toute PR dépassant **800 lignes** de diff par rapport à `dev`.
+  - **Mise à jour du Skill [`ticket-lifecycle`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/.agents/skills/ticket-lifecycle/SKILL.md) et de [`ticket-workflow.md`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/.agents/rules/ticket-workflow.md) :**
+    - Règle formelle imposant des PRs atomiques (cible idéale : 200 à 500 lignes, plafond dur à 800 lignes).
+    - Découpage obligatoire des fonctionnalités volumineuses en sous-tickets.
+  - **Mise à jour d'[`AGENTS.md`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/AGENTS.md) :** Règle cardinale sur les PRs atomiques vers `dev`.
+- **Règles & Prévention :**
+  - Garde-fou mécanique bloquant dans `git-guard.sh`.
+  - Contrôle systématique du diff avant soumission.
+- **Statut :** Résolu ✅
+
+---
+
+### [ERR-20261015-07] Faille de sécurité : Usurpation d'opérateur lors de la prise de ticket (BOLA / Confiance aveugle dans le payload client)
+
+- **Date & Heure :** 2026-10-15 14:32:00
+- **Signalement Utilisateur :**
+  > "Il y a une faille de sécurité : via le navigateur, je peux prendre une tâche à la place d'un autre opérateur."
+- **Symptôme Constaté :**
+  Un utilisateur authentifié (ex: Sarah) pouvait manipuler `localStorage.setItem('supervis_current_operator', 'Théo')` ou forger une requête `PATCH /api/alerts/[id]` avec `{ action: 'ACK', operator: 'Théo' }` pour s'approprier un incident sous l'identité d'un collègue sans que le backend ne bloque l'action.
+- **Analyse de Cause Racine (RCA) :**
+  1. **Confiance aveugle dans le payload JSON (`req.body.operator`) :** Le route handler [`app/src/app/api/alerts/[id]/route.ts`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/app/src/app/api/alerts/%5Bid%5D/route.ts) assignait le champ `assignedTo` à partir de `body.operator` sans vérifier le cookie de session HTTP-only signé (`supervis_session`).
+  2. **Vulnérabilité BOLA / Insecure Direct Object Reference :** Le middleware laissait passer la requête car le cookie de session existait, mais la route ne vérifiait pas la correspondance entre l'identité du jeton de session et l'identité revendiquée dans le body.
+  3. **Mutabilité non protégée côté client :** Le hook [`useOperator.ts`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/app/src/hooks/useOperator.ts) autorisait la modification de l'opérateur courant en local (`changeOperator`) en écrasant `localStorage`.
+- **Correctifs Appliqués :**
+  - **Validation serveur stricte de la session dans [`app/src/app/api/alerts/[id]/route.ts`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/app/src/app/api/alerts/%5Bid%5D/route.ts) :**
+    - Extraction et décodage cryptographique du cookie `supervis_session` via `verifySessionToken`.
+    - Pour l'action `ACK` : si une session est présente et que `body.operator` diffère de `session.name`, rejet immédiat avec code **`403 Forbidden`** (*tentative d'usurpation d'identité*). L'assignation est forcée sur `session.name`.
+    - Pour l'action `TRANSFER` : vérification stricte que le demandeur du transfert est le détenteur réel authentifié (`session.name === alert.assignedTo`), sinon retour **`403 Forbidden`**.
+  - **Verrouillage de l'identité côté client dans [`useOperator.ts`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/app/src/hooks/useOperator.ts) :**
+    - Suppression de la surcharge par `localStorage` ; l'identité est liée exclusivement à la session active `/api/auth/me`.
+    - Blocage de toute tentative de changement d'identité via `changeOperator` sans déconnexion/reconnexion.
+  - **Tests automatisés d'anti-usurpation dans [`tests/integration/atomic-locking.test.ts`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/app/tests/integration/atomic-locking.test.ts) :**
+    - Test de tentative d'appropriation sous faux nom -> 403 Forbidden validé.
+    - Test d'assignation conforme avec cookie légitime -> 200 OK validé.
+    - Test de tentative de transfert illégitime -> 403 Forbidden validé.
+- **Règles & Prévention :**
+  - Règle ajoutée dans [`.agents/rules/code-quality.md`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/.agents/rules/code-quality.md) (Section 5 : "Sécurité, Autorisation & Contrôle d'Accès Backend — Zéro Confiance Client").
+  - Directive cardinale de sécurité inscrite dans [`AGENTS.md`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/AGENTS.md).
+- **Statut :** Résolu ✅
+
+

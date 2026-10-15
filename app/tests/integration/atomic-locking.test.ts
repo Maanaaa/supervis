@@ -3,6 +3,7 @@ import { connectDB, disconnectDB } from '@/lib/db';
 import { Alert } from '@/models/Alert';
 import { PATCH } from '../../src/app/api/alerts/[id]/route';
 import { setIO } from '@/lib/socket';
+import { createSessionToken, SESSION_COOKIE_NAME } from '@/lib/session';
 import type { Server as SocketIOServer } from 'socket.io';
 
 describe('Tests d’Intégration — Concurrence Atomique Sub-milliseconde (Ticket #4)', () => {
@@ -189,5 +190,133 @@ describe('Tests d’Intégration — Concurrence Atomique Sub-milliseconde (Tick
     });
     const secondResolve = await PATCH(secondRequest, { params: { id: alertId } });
     expect(secondResolve.status).toBe(409);
+  });
+
+  describe('Sécurité & Contrôle d’Accès (Anti-Usurpation d’Identité)', () => {
+    it('doit bloquer un utilisateur qui tente de prendre un ticket au nom d’un autre opérateur (403 Forbidden)', async () => {
+      // Session authentifiée au nom de "Sarah"
+      const sarahToken = await createSessionToken({
+        userId: '507f1f77bcf86cd799439011',
+        name: 'Sarah',
+        email: 'sarah@supervis.local',
+        role: 'ASTREINTE',
+        isOnDuty: true,
+      });
+
+      const alert = await Alert.create({
+        serverName: 'Database Node 1',
+        title: 'Connexions saturées',
+        message: 'Max connections reached',
+        severity: 'CRITICAL',
+        status: 'OPEN',
+      });
+
+      const alertId = alert._id.toString();
+
+      // Sarah tente de s'approprier le ticket au nom de "Théo"
+      const impersonationReq = new Request(`http://localhost:3000/api/alerts/${alertId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Cookie: `${SESSION_COOKIE_NAME}=${sarahToken}`,
+        },
+        body: JSON.stringify({
+          action: 'ACK',
+          operator: 'Théo',
+        }),
+      });
+
+      const res = await PATCH(impersonationReq, { params: { id: alertId } });
+      expect(res.status).toBe(403);
+
+      const body = await res.json();
+      expect(body.success).toBe(false);
+      expect(body.error).toContain("tentative d'usurpation d'identité");
+
+      // Vérification que le ticket est toujours OPEN en base
+      const checkAlert = await Alert.findById(alertId);
+      expect(checkAlert?.status).toBe('OPEN');
+    });
+
+    it('doit assigner le ticket à l’opérateur authentifié lorsque l’identité correspond', async () => {
+      const theoToken = await createSessionToken({
+        userId: '507f1f77bcf86cd799439012',
+        name: 'Théo',
+        email: 'theo@supervis.local',
+        role: 'ADMIN',
+        isOnDuty: true,
+      });
+
+      const alert = await Alert.create({
+        serverName: 'Worker API',
+        title: 'Queue backlog',
+        message: 'Too many messages',
+        severity: 'WARNING',
+        status: 'OPEN',
+      });
+
+      const alertId = alert._id.toString();
+
+      const legitReq = new Request(`http://localhost:3000/api/alerts/${alertId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Cookie: `${SESSION_COOKIE_NAME}=${theoToken}`,
+        },
+        body: JSON.stringify({
+          action: 'ACK',
+          operator: 'Théo',
+        }),
+      });
+
+      const res = await PATCH(legitReq, { params: { id: alertId } });
+      expect(res.status).toBe(200);
+
+      const body = await res.json();
+      expect(body.success).toBe(true);
+      expect(body.alert.assignedTo).toBe('Théo');
+      expect(body.alert.status).toBe('ACK');
+    });
+
+    it('doit bloquer un utilisateur qui tente de transférer un ticket au nom d’un autre opérateur (403 Forbidden)', async () => {
+      const sarahToken = await createSessionToken({
+        userId: '507f1f77bcf86cd799439011',
+        name: 'Sarah',
+        email: 'sarah@supervis.local',
+        role: 'ASTREINTE',
+        isOnDuty: true,
+      });
+
+      const alert = await Alert.create({
+        serverName: 'Storage NAS',
+        title: 'RAID Dégradé',
+        message: 'Disque 2 en défaut',
+        severity: 'CRITICAL',
+        status: 'ACK',
+        assignedTo: 'Théo',
+      });
+
+      const alertId = alert._id.toString();
+
+      // Sarah envoie un body prétendant être Théo pour transférer
+      const spoofTransferReq = new Request(`http://localhost:3000/api/alerts/${alertId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Cookie: `${SESSION_COOKIE_NAME}=${sarahToken}`,
+        },
+        body: JSON.stringify({
+          action: 'TRANSFER',
+          currentOperator: 'Théo',
+          targetOperator: 'Sarah',
+        }),
+      });
+
+      const res = await PATCH(spoofTransferReq, { params: { id: alertId } });
+      expect(res.status).toBe(403);
+
+      const body = await res.json();
+      expect(body.error).toContain('Action non autorisée');
+    });
   });
 });

@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server';
 import mongoose from 'mongoose';
+import { cookies } from 'next/headers';
 import { connectDB } from '@/lib/db';
 import { Alert } from '@/models/Alert';
 import { emitSocket } from '@/lib/socket';
+import { verifySessionToken, SESSION_COOKIE_NAME } from '@/lib/session';
 
 interface PatchAlertBody {
   action?: 'ACK' | 'TRANSFER' | 'RESOLVE';
@@ -10,6 +12,32 @@ interface PatchAlertBody {
   currentOperator?: string;
   targetOperator?: string;
   resolutionComment?: string;
+}
+
+async function getAuthenticatedOperator(request: Request): Promise<string | null> {
+  let token: string | undefined;
+
+  try {
+    const cookieStore = cookies();
+    token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+  } catch {
+    // Hors contexte de requête App Router direct (ex: tests Jest)
+  }
+
+  if (!token) {
+    const cookieHeader = request.headers.get('cookie');
+    if (cookieHeader) {
+      const match = cookieHeader.match(new RegExp(`(?:^|;\\s*)${SESSION_COOKIE_NAME}=([^;]*)`));
+      if (match) {
+        token = decodeURIComponent(match[1]);
+      }
+    }
+  }
+
+  if (!token) return null;
+
+  const session = await verifySessionToken(token);
+  return session ? session.name : null;
 }
 
 export async function GET(_request: Request, { params }: { params: { id: string } }) {
@@ -60,21 +88,39 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     }
 
     const { action } = body;
+    const authenticatedOperator = await getAuthenticatedOperator(request);
 
     // 1. ACTION ACK : Prise en charge avec verrouillage atomique conditionnel
     if (action === 'ACK') {
       const { operator } = body;
-      if (!operator || typeof operator !== 'string' || operator.trim() === '') {
+      const requestedOperator = operator?.trim();
+
+      // Sécurité anti-usurpation : si une session est active, interdire de prendre le ticket sous un autre nom
+      if (
+        authenticatedOperator &&
+        requestedOperator &&
+        requestedOperator !== authenticatedOperator
+      ) {
         return NextResponse.json(
           {
             success: false,
-            error: 'Le champ operator est requis pour prendre en charge une alerte.',
+            error: `Action non autorisée : tentative d'usurpation d'identité. Vous êtes authentifié en tant que "${authenticatedOperator}" et ne pouvez pas prendre de ticket sous l'identité de "${requestedOperator}".`,
+          },
+          { status: 403 }
+        );
+      }
+
+      const assignedTo = authenticatedOperator || requestedOperator;
+      if (!assignedTo) {
+        return NextResponse.json(
+          {
+            success: false,
+            error:
+              'Le champ operator ou une session authentifiée est requis pour prendre en charge une alerte.',
           },
           { status: 400 }
         );
       }
-
-      const assignedTo = operator.trim();
 
       // Opération atomique MongoDB : condition stricte sur status: 'OPEN'
       const updatedAlert = await Alert.findOneAndUpdate(
@@ -124,11 +170,24 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     if (action === 'TRANSFER') {
       const { currentOperator, targetOperator } = body;
 
+      // Sécurité anti-usurpation : si une session est active, vérifier que currentOperator correspond
       if (
-        !currentOperator ||
-        typeof currentOperator !== 'string' ||
-        currentOperator.trim() === ''
+        authenticatedOperator &&
+        currentOperator &&
+        currentOperator.trim() !== authenticatedOperator
       ) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: `Action non autorisée : vous êtes authentifié en tant que "${authenticatedOperator}" et ne pouvez pas initier de transfert au nom de "${currentOperator}".`,
+          },
+          { status: 403 }
+        );
+      }
+
+      const effectiveCurrentOperator = authenticatedOperator || currentOperator?.trim();
+
+      if (!effectiveCurrentOperator) {
         return NextResponse.json(
           { success: false, error: 'Le champ currentOperator est requis pour un transfert.' },
           { status: 400 }
@@ -142,7 +201,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
         );
       }
 
-      if (currentOperator.trim() === targetOperator.trim()) {
+      if (effectiveCurrentOperator === targetOperator.trim()) {
         return NextResponse.json(
           { success: false, error: 'L’opérateur cible doit être différent de l’opérateur actuel.' },
           { status: 400 }
@@ -154,14 +213,14 @@ export async function PATCH(request: Request, { params }: { params: { id: string
         {
           _id: id,
           status: 'ACK',
-          assignedTo: currentOperator.trim(),
+          assignedTo: effectiveCurrentOperator,
         },
         {
           $set: {
             assignedTo: targetOperator.trim(),
           },
           $push: {
-            transferredFrom: currentOperator.trim(),
+            transferredFrom: effectiveCurrentOperator,
           },
         },
         { new: true }

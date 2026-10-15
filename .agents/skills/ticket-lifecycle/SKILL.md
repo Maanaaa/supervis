@@ -23,7 +23,10 @@ description: >-
 4. **Commit & Push** :
    - Suivre le skill `commit-crafting`.
    - Pousser la branche : `git push -u origin feat/issue-X-<slug>`.
-5. **Pull Request vers `dev`** :
+5. **Pull Request atomique vers `dev`** :
+   - Vérifier la taille du diff : `git diff --shortstat dev...HEAD`.
+   - Règle stricte : Le diff doit être ≤ 800 lignes (idéalement 200 à 500). Interdiction absolue de PRs géantes.
+   - Base branch : Toujours `--base dev`. Interdiction absolue de cibler `main`.
    ```bash
    gh pr create --base dev --head feat/issue-X-<slug> --title "feat(#X): <titre>" --body "Closes #X. <description concise>"
    ```
