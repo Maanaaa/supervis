@@ -1,43 +1,53 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 
-export function useSocket() {
-  const [isConnected, setIsConnected] = useState<boolean>(false);
-  const socketRef = useRef<Socket | null>(null);
+let sharedSocket: Socket | null = null;
 
-  useEffect(() => {
-    // Connexion automatique sur l'hôte courant
-    const socket = io({
+function getOrCreateSocket(): Socket | null {
+  if (typeof window === 'undefined') return null;
+  if (!sharedSocket) {
+    sharedSocket = io({
       path: '/socket.io',
       reconnectionAttempts: 10,
       reconnectionDelay: 1000,
       autoConnect: true,
     });
+  }
+  return sharedSocket;
+}
 
-    socketRef.current = socket;
+export function useSocket() {
+  const [isConnected, setIsConnected] = useState<boolean>(() => {
+    return sharedSocket ? sharedSocket.connected : false;
+  });
 
-    socket.on('connect', () => {
+  useEffect(() => {
+    const socket = getOrCreateSocket();
+    if (!socket) return;
+
+    const handleConnect = () => setIsConnected(true);
+    const handleDisconnect = () => setIsConnected(false);
+    const handleError = () => setIsConnected(false);
+
+    if (socket.connected) {
       setIsConnected(true);
-    });
+    }
 
-    socket.on('disconnect', () => {
-      setIsConnected(false);
-    });
-
-    socket.on('connect_error', () => {
-      setIsConnected(false);
-    });
+    socket.on('connect', handleConnect);
+    socket.on('disconnect', handleDisconnect);
+    socket.on('connect_error', handleError);
 
     return () => {
-      socket.disconnect();
-      socketRef.current = null;
+      socket.off('connect', handleConnect);
+      socket.off('disconnect', handleDisconnect);
+      socket.off('connect_error', handleError);
     };
   }, []);
 
   return {
-    socket: socketRef.current,
+    socket: sharedSocket || getOrCreateSocket(),
     isConnected,
   };
 }

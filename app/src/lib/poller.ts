@@ -177,18 +177,27 @@ export async function checkSingleServer(
 
     const failureReason = check.error || 'Serveur injoignable';
 
-    // Création immédiate de l'alerte CRITICAL en base MongoDB
-    const alert = await Alert.create({
+    // Déduplication anti-flood : ne pas créer de doublon si une alerte est déjà active (OPEN ou ACK)
+    const existingActiveAlert = await Alert.findOne({
       serverId: server._id,
-      serverName: server.name,
-      title: `Serveur ${server.name} injoignable`,
-      message: `Échec du health check sur ${targetUrl} : ${failureReason}`,
-      severity: 'CRITICAL',
-      status: 'OPEN',
+      status: { $in: ['OPEN', 'ACK'] },
     });
 
-    // Émissions Socket.IO instantanées
-    emitSocket('alert:new', alert.toJSON());
+    if (!existingActiveAlert) {
+      // Création immédiate de l'alerte CRITICAL en base MongoDB
+      const alert = await Alert.create({
+        serverId: server._id,
+        serverName: server.name,
+        title: `Serveur ${server.name} injoignable`,
+        message: `Échec du health check sur ${targetUrl} : ${failureReason}`,
+        severity: 'CRITICAL',
+        status: 'OPEN',
+      });
+
+      // Émission Socket.IO instantanée
+      emitSocket('alert:new', alert.toJSON());
+    }
+
     if (updatedServer) {
       emitSocket('server:status_change', updatedServer.toJSON());
     }
