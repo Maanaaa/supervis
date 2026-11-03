@@ -43,4 +43,3 @@ export function invalidateCache(prefix?: string): void {
     }
   }
 }
-
