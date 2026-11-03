@@ -269,10 +269,6 @@ Ce document consigne l'historique exhaustif des anomalies signalées, leur diagn
   - Règle de programmation défensive sur tous les champs d'objets externes ou issus de la base.
 - **Statut :** Résolu ✅.
 
-
-
-
-
 ---
 
 ### [ERR-20261103-13] Désynchronisation des assets Next.js (404 CSS/JS) suite à une exécution concurrente de `next build` avec le serveur dev
@@ -291,4 +287,24 @@ Ce document consigne l'historique exhaustif des anomalies signalées, leur diagn
   - Validation du retour HTTP 200 sur les endpoints CSS et JS chunks.
 - **Règles & Prévention :**
   - Ne jamais exécuter `next build` dans le même dossier de travail pendant qu'un serveur `next dev` écoute.
+- **Statut :** Résolu ✅.
+
+
+---
+
+### [ERR-20261103-14] Serveur "srv-database-01" absent de la liste des serveurs lors des alertes disque du simulateur
+
+- **Date & Heure :** 2026-11-03 14:45:00
+- **Signalement Utilisateur :**
+  > ""🖥️ srv-database-01" dans les erreurs ok. Mais dans la liste des serveurs je ne l'ai pas quoi"
+- **Symptôme Constaté :**
+  Lorsqu'une alerte "Panne Disque saturé" était simulée, l'alerte apparaissait bien dans les incidents sous le nom `srv-database-01`, mais ce serveur était absent de l'onglet "Parc Serveurs" et son champ `serverId` était `undefined`.
+- **Analyse de Cause Racine (RCA) :**
+  1. **Divergence de nommage dans les seeds :** [`app/server.js`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/app/server.js) initialisait la base de données avec le serveur nommé `db-primary-sql`, tandis que le simulateur dans [`app/src/app/api/simulator/trigger/route.ts`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/app/src/app/api/simulator/trigger/route.ts) utilisait `srv-database-01` en valeur par défaut sans vérifier son existence préalable dans la collection `servers`.
+  2. **Absence de création automatique de repli :** Contrairement à la simulation `server_down` qui créait automatiquement le serveur si manquant, les actions `cpu`, `disk` et `nginx` créaient uniquement l'alerte avec un `serverId` vide si aucun serveur ne correspondait.
+- **Correctifs Appliqués :**
+  - **Mise à jour des seeds serveur :** Remplacement de `db-primary-sql` par `srv-database-01` dans `server.js` avec tous les champs requis (`host: '192.168.1.20'`, `port: 5432`, `healthUrl: '/health'`, `status: 'UP'`).
+  - **Auto-provisioning et liaison stricte :** Dans `route.ts`, si un serveur cible (`srv-database-01`, `web-prod-01`, etc.) n'existe pas lors du déclenchement d'une simulation (`cpu`, `disk`, `nginx`), il est automatiquement créé en base, indexé dans le cache et synchronisé en temps réel via Socket.IO (`server:created`). L'alerte est systématiquement liée à son `_id`.
+- **Règles & Prévention :**
+  - Toute entité d'alerte simulée doit être liée à une ressource existante et consultable dans le parc de serveurs.
 - **Statut :** Résolu ✅.

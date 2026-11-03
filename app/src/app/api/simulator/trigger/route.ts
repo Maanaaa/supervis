@@ -3,6 +3,7 @@ import { connectDB } from '@/lib/db';
 import { Alert } from '@/models/Alert';
 import { Server } from '@/models/Server';
 import { emitSocket } from '@/lib/socket';
+import { invalidateCache } from '@/lib/cache';
 import type { AlertSeverity } from '@/types/alert';
 
 export type SimulatorActionType =
@@ -52,19 +53,40 @@ export async function POST(request: Request) {
 
     switch (type) {
       case 'cpu': {
-        const serverName = body.serverName?.trim() || 'srv-prod-api';
+        const rawServerName = body.serverName?.trim();
+        let existingServer = rawServerName ? await Server.findOne({ name: rawServerName }) : null;
+        if (!existingServer && !rawServerName) {
+          existingServer =
+            (await Server.findOne({ name: 'web-prod-01' })) ||
+            (await Server.findOne({ name: /web|api|prod/i })) ||
+            (await Server.findOne());
+        }
+
+        if (!existingServer) {
+          existingServer = await Server.create({
+            name: rawServerName || 'web-prod-01',
+            host: '192.168.1.10',
+            port: 80,
+            healthUrl: '/health',
+            description: 'Serveur Web & API de production',
+            status: 'UP',
+            latencyMs: 15,
+            lastCheckAt: new Date(),
+          });
+          emitSocket('server:created', existingServer.toJSON());
+          invalidateCache('servers:all');
+        }
+
+        const serverName = existingServer.name;
         const title = body.title?.trim() || 'Charge CPU 98%';
         const message =
           body.message?.trim() ||
           'Surcharge processeur critique (> 95% depuis 3 min) sur le thread principal.';
         const severity: AlertSeverity = body.severity || 'CRITICAL';
 
-        // Recherche d'un serveur existant avec ce nom ou association
-        const existingServer = await Server.findOne({ name: serverName });
-
         const alert = await Alert.create({
           serverName,
-          serverId: body.serverId || existingServer?._id || undefined,
+          serverId: body.serverId || existingServer._id,
           title,
           message,
           severity,
@@ -85,18 +107,40 @@ export async function POST(request: Request) {
       }
 
       case 'disk': {
-        const serverName = body.serverName?.trim() || 'srv-database-01';
+        const rawServerName = body.serverName?.trim();
+        let existingServer = rawServerName ? await Server.findOne({ name: rawServerName }) : null;
+        if (!existingServer && !rawServerName) {
+          existingServer =
+            (await Server.findOne({ name: 'srv-database-01' })) ||
+            (await Server.findOne({ name: /db|database|sql/i })) ||
+            (await Server.findOne());
+        }
+
+        if (!existingServer) {
+          existingServer = await Server.create({
+            name: rawServerName || 'srv-database-01',
+            host: '192.168.1.20',
+            port: 5432,
+            healthUrl: '/health',
+            description: 'Serveur de Base de Données Principal',
+            status: 'UP',
+            latencyMs: 18,
+            lastCheckAt: new Date(),
+          });
+          emitSocket('server:created', existingServer.toJSON());
+          invalidateCache('servers:all');
+        }
+
+        const serverName = existingServer.name;
         const title = body.title?.trim() || 'Disque saturé à 96%';
         const message =
           body.message?.trim() ||
           'Partition racine / saturée : 1.2 Go disponible sur 50 Go. Seuil critique dépassé.';
         const severity: AlertSeverity = body.severity || 'WARNING';
 
-        const existingServer = await Server.findOne({ name: serverName });
-
         const alert = await Alert.create({
           serverName,
-          serverId: body.serverId || existingServer?._id || undefined,
+          serverId: body.serverId || existingServer._id,
           title,
           message,
           severity,
@@ -117,18 +161,40 @@ export async function POST(request: Request) {
       }
 
       case 'nginx': {
-        const serverName = body.serverName?.trim() || 'srv-lb-edge';
+        const rawServerName = body.serverName?.trim();
+        let existingServer = rawServerName ? await Server.findOne({ name: rawServerName }) : null;
+        if (!existingServer && !rawServerName) {
+          existingServer =
+            (await Server.findOne({ name: 'api-gateway-01' })) ||
+            (await Server.findOne({ name: /gateway|nginx|lb/i })) ||
+            (await Server.findOne());
+        }
+
+        if (!existingServer) {
+          existingServer = await Server.create({
+            name: rawServerName || 'api-gateway-01',
+            host: '192.168.1.11',
+            port: 80,
+            healthUrl: '/health',
+            description: 'Reverse Proxy & Passerelle API',
+            status: 'DOWN',
+            latencyMs: 3000,
+            lastCheckAt: new Date(),
+          });
+          emitSocket('server:created', existingServer.toJSON());
+          invalidateCache('servers:all');
+        }
+
+        const serverName = existingServer.name;
         const title = body.title?.trim() || 'Nginx unresponsive';
         const message =
           body.message?.trim() ||
           'Le reverse proxy Nginx ne répond plus sur le port 80/443 (502 Bad Gateway).';
         const severity: AlertSeverity = body.severity || 'CRITICAL';
 
-        const existingServer = await Server.findOne({ name: serverName });
-
         const alert = await Alert.create({
           serverName,
-          serverId: body.serverId || existingServer?._id || undefined,
+          serverId: body.serverId || existingServer._id,
           title,
           message,
           severity,

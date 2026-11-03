@@ -120,7 +120,10 @@ async function setupDatabase() {
         await db.collection('servers').insertMany([
           {
             name: 'web-prod-01',
+            host: '192.168.1.10',
             ip: '192.168.1.10',
+            port: 80,
+            healthUrl: '/health',
             healthCheckUrl: 'http://192.168.1.10/health',
             status: 'UP',
             createdAt: new Date(),
@@ -128,15 +131,21 @@ async function setupDatabase() {
           },
           {
             name: 'api-gateway-01',
+            host: '192.168.1.11',
             ip: '192.168.1.11',
+            port: 80,
+            healthUrl: '/health',
             healthCheckUrl: 'http://192.168.1.11/health',
-            status: 'WARNING',
+            status: 'UP',
             createdAt: new Date(),
             updatedAt: new Date(),
           },
           {
-            name: 'db-primary-sql',
+            name: 'srv-database-01',
+            host: '192.168.1.20',
             ip: '192.168.1.20',
+            port: 5432,
+            healthUrl: '/health',
             healthCheckUrl: 'http://192.168.1.20/health',
             status: 'UP',
             createdAt: new Date(),
@@ -144,13 +153,40 @@ async function setupDatabase() {
           },
           {
             name: 'redis-cache-01',
+            host: '192.168.1.30',
             ip: '192.168.1.30',
+            port: 6379,
+            healthUrl: '/health',
             healthCheckUrl: 'http://192.168.1.30/health',
             status: 'UP',
             createdAt: new Date(),
             updatedAt: new Date(),
           },
         ]);
+      } else {
+        // Garantir la présence de srv-database-01 et des champs requis
+        const hasDb = await db.collection('servers').findOne({ name: 'srv-database-01' });
+        if (!hasDb) {
+          const oldDb = await db.collection('servers').findOne({ name: 'db-primary-sql' });
+          if (oldDb) {
+            await db.collection('servers').updateOne(
+              { _id: oldDb._id },
+              { $set: { name: 'srv-database-01', host: oldDb.host || oldDb.ip || '192.168.1.20', port: 5432, healthUrl: '/health' } }
+            );
+          } else {
+            await db.collection('servers').insertOne({
+              name: 'srv-database-01',
+              host: '192.168.1.20',
+              ip: '192.168.1.20',
+              port: 5432,
+              healthUrl: '/health',
+              healthCheckUrl: 'http://192.168.1.20/health',
+              status: 'UP',
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            });
+          }
+        }
       }
 
       await seedDefaultOperators(db);
