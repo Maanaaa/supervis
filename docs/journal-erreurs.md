@@ -190,5 +190,85 @@ Ce document consigne l'historique exhaustif des anomalies signalées, leur diagn
   - Documentation de référence mise à jour dans l'artifact d'audit.
 - **Statut :** Résolu ✅
 
+---
+
+### [ERR-20261103-09] Blocage CPU synchrone (`scryptSync`), saturation du pool Mongoose et latence p95 dégradée sous charge (9,5% d'échecs)
+
+- **Date & Heure :** 2026-11-03 09:16:00
+- **Signalement Utilisateur :**
+  > "et fait moi un retour sur ce qui va pas, ce qui est trop lent etc"
+- **Symptôme Constaté :**
+  Sous test de stress intensif Artillery (84 req/s), la latence p95 s'est envolée à 6,56 secondes et 389 requêtes ont échoué par timeout socket (`ERR_SOCKET_TIMEOUT`, `ECONNRESET`, `EPIPE`).
+- **Analyse de Cause Racine (RCA) :**
+  1. **Blocage de l'Event Loop Node.js :** `verifyPassword` dans [`app/src/lib/auth.ts`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/app/src/lib/auth.ts) exécutait `crypto.scryptSync` sur le thread principal à chaque tentative de login. À 50 logins simultanés, le CPU figeait la boucle pendant plusieurs secondes.
+  2. **Pool de connexions sous-calibré :** `maxPoolSize` Mongoose était à 10 connexions par défaut dans `connectDB()`, forçant plus de 70 requêtes simultanées à faire la queue.
+  3. **Absence de pagination et surcharge mémoire :** `GET /api/alerts` renvoyait la collection complète sans `.limit()` ni `.lean()`, transférant plus de 67 Mo de JSON lourd.
+  4. **Coût cryptographique répété sur chaque requête :** Le middleware importait et calculait la signature HMAC SHA-256 sans cache mémoire pour chaque appel d'un même opérateur.
+- **Correctifs Appliqués :**
+  - **`scryptAsync` déporté :** Implémentation de `verifyPasswordAsync` utilisant `util.promisify(crypto.scrypt)` dans le thread pool libuv.
+  - **Cache In-Memory TTL & Invalidation :** Création de [`app/src/lib/cache.ts`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/app/src/lib/cache.ts) pour `/api/alerts` et `/api/servers` avec invalidation immédiate sur chaque écriture (`POST`, `PATCH`, `DELETE`).
+  - **Fast-path session :** Mise en cache mémoire des sessions validées (`tokenCache`) dans [`app/src/lib/session.ts`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/app/src/lib/session.ts).
+  - **Dimensionnement Mongoose :** `maxPoolSize: 100`, `minPoolSize: 10`, et utilisation de `.lean().limit(50)`.
+- **Règles & Prévention :**
+  - Consignation dans l'ADR-0011.
+  - Interdiction d'opérations cryptographiques CPU-bloquantes synchrones sur le thread HTTP principal.
+- **Statut :** Résolu ✅ (Latence p95 passée de 6 569 ms à 44 ms, 0 erreur).
+
+---
+
+### [ERR-20261103-10] Arrêt inattendu du serveur HTTP sous saturation de connexions (`EPIPE` non intercepté)
+
+- **Date & Heure :** 2026-11-03 09:14:00
+- **Signalement Utilisateur :**
+  > "Encore plus gros stp" (Le serveur s'est arrêté lors de la montée à 80 VU/s)
+- **Symptôme Constaté :**
+  Le processus `node server.js` s'est interrompu brutalement lors d'un pic de charge soutenu, entraînant des erreurs `ECONNREFUSED` sur le banc de charge.
+- **Analyse de Cause Racine (RCA) :**
+  1. **Absence d'intercepteur d'erreur :** L'instance `http.createServer` dans [`app/server.js`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/app/server.js) ne disposait d'aucun écouteur `server.on('error', ...)`. Une fermeture de socket abrupte côté client émettait une exception non interceptée faisant planter le runtime.
+  2. **File d'attente système limitée :** Le backlog d'écoute TCP utilisait la valeur par défaut du système (511), rejetant les connexions en rafale au-delà du seuil.
+- **Correctifs Appliqués :**
+  - Ajout de l'écouteur `server.on('error', (err) => console.error('> Erreur serveur HTTP :', err.message))`.
+  - Configuration de `server.keepAliveTimeout = 65000`, `server.headersTimeout = 66000`, `server.maxConnections = 65535` et backlog socket à `2048` dans `server.listen`.
+- **Règles & Prévention :**
+  - Obligation d'intercepter les erreurs d'infrastructures sockets dans le serveur HTTP central.
+- **Statut :** Résolu ✅.
+
+---
+
+### [ERR-20261103-11] Rejet 401 Unauthorized à la connexion sur saisie sans accent ("theo") suite au matching strict de l'identifiant
+
+- **Date & Heure :** 2026-11-03 14:21:00
+- **Signalement Utilisateur :**
+  > "Pourquoi est-ce que je ne peux plus me connecter"
+- **Symptôme Constaté :**
+  L'utilisateur essayait de se connecter avec l'identifiant `theo` et le mot de passe valide `admin` sur `/login`, mais recevait le message d'erreur `Identifiant ou mot de passe incorrect (401 Unauthorized)`.
+- **Analyse de Cause Racine (RCA) :**
+  1. **Sensibilité diacritique du matching MongoDB :** Le compte opérateur par défaut est amorcé avec le nom `Théo` (accent aigu).
+  2. **Regex sensible aux accents :** Dans [`app/src/app/api/auth/login/route.ts`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/app/src/app/api/auth/login/route.ts), la recherche utilisait `new RegExp(`^${escaped}$`, 'i')`. Le flag `i` gère uniquement les majuscules/minuscules, mais ne fait pas correspondre `e` avec `é`, provoquant l'absence d'opérateur trouvé et le rejet 401.
+- **Correctifs Appliqués :**
+  - **Normalisation diacritique :** Remplacement des voyelles dans la Regex par leur classe équivalente (`[eèéêë]`, `[aàáâãäå]`, etc.) dans `route.ts`.
+  - Connexion désormais acceptée indifféremment pour `theo`, `théo`, `Theo` ou `Théo`.
+- **Règles & Prévention :**
+  - Tout champ d'identification nominatif en français doit être traité avec tolérance aux accents.
+- **Statut :** Résolu ✅.
+
+---
+
+### [ERR-20261103-12] Exception TypeError dans `buildHealthUrl` du poller (`Cannot read properties of undefined (reading 'trim')`)
+
+- **Date & Heure :** 2026-11-03 14:22:00
+- **Signalement Utilisateur :**
+  Détecté dans les logs du serveur de développement.
+- **Symptôme Constaté :**
+  Erreur `[Poller] Erreur inattendue : TypeError: Cannot read properties of undefined (reading 'trim')` au niveau de `buildHealthUrl`.
+- **Analyse de Cause Racine (RCA) :**
+  Certains serveurs mockés ou créés lors de tests ne renseignaient pas le champ `host` ou utilisaient `ip`. L'appel direct `server.host.trim()` sans valeur de repli levait une exception non gérée.
+- **Correctifs Appliqués :**
+  Sécurisation défensive de `buildHealthUrl` dans [`app/src/lib/poller.ts`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/app/src/lib/poller.ts#L22) : `const rawHost = (server.host || '127.0.0.1').trim()`.
+- **Règles & Prévention :**
+  - Règle de programmation défensive sur tous les champs d'objets externes ou issus de la base.
+- **Statut :** Résolu ✅.
+
+
 
 
