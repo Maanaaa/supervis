@@ -36,12 +36,18 @@ export async function POST(request: Request) {
 
     const trimmed = identifier.trim();
     const escaped = trimmed.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const accentPattern = escaped
+      .replace(/[aàáâãäå]/gi, '[aàáâãäå]')
+      .replace(/[eèéêë]/gi, '[eèéêë]')
+      .replace(/[iìíîï]/gi, '[iìíîï]')
+      .replace(/[oòóôõö]/gi, '[oòóôõö]')
+      .replace(/[uùúûü]/gi, '[uùúûü]');
 
     const findOperator = () =>
       User.findOne({
         $or: [
           { email: trimmed.toLowerCase() },
-          { name: { $regex: new RegExp(`^${escaped}$`, 'i') } },
+          { name: { $regex: new RegExp(`^${accentPattern}$`, 'i') } },
         ],
       }).select('+password');
 
