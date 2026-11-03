@@ -67,3 +67,4 @@ Nous intégrons **Artillery** comme banc de test de charge et de stress officiel
 
 ### Compromis
 - **Cache en mémoire local :** Le cache TTL est interne au processus Node.js actuel. En cas de déploiement en cluster multi-nœuds futur, un broker Redis sera nécessaire pour la synchronisation globale du cache et des WebSockets.
+

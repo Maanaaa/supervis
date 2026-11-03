@@ -272,3 +272,23 @@ Ce document consigne l'historique exhaustif des anomalies signalées, leur diagn
 
 
 
+
+---
+
+### [ERR-20261103-13] Désynchronisation des assets Next.js (404 CSS/JS) suite à une exécution concurrente de `next build` avec le serveur dev
+
+- **Date & Heure :** 2026-11-03 14:35:00
+- **Signalement Utilisateur :**
+  > "heu" (Capture d'écran montrant le dashboard avec fond blanc, aucun style CSS chargé et badge "RECONNEXION...")
+- **Symptôme Constaté :**
+  Tous les liens d'actifs statiques (`/_next/static/css/app/layout.css?v=...`, `/_next/static/chunks/app/layout.js`, etc.) retournaient des codes HTTP `404 Not Found`. L'interface s'affichait brute (HTML natif sans thème Tailwind sombre) et le client Socket.IO ne s'initialisait pas (badge bloqué sur l'état SSR "RECONNEXION...").
+- **Analyse de Cause Racine (RCA) :**
+  Une commande de build (`next build`) a été exécutée en tâche de fond dans le répertoire `app/` pendant qu'une instance de développement (`next dev` via `server.js`) tournait en parallèle. Le compilateur Next.js a purgé et remplacé les fichiers dev de `.next/` par des bundles hachés de production. Le serveur dev en mémoire continuait de servir les balises HTML dev qui n'existaient plus sur le disque.
+- **Correctifs Appliqués :**
+  - Arrêt du processus dev serveur.
+  - Purge propre du répertoire de build : `rm -rf app/.next`.
+  - Redémarrage du serveur dev (`npm run dev`).
+  - Validation du retour HTTP 200 sur les endpoints CSS et JS chunks.
+- **Règles & Prévention :**
+  - Ne jamais exécuter `next build` dans le même dossier de travail pendant qu'un serveur `next dev` écoute.
+- **Statut :** Résolu ✅.
