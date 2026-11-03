@@ -25,7 +25,10 @@ export async function GET(request: Request) {
       query = { status: { $in: ['OPEN', 'ACK'] } };
     }
 
-    const alerts = await Alert.find(query).sort({ createdAt: -1 });
+    const limitParam = searchParams.get('limit');
+    const limit = limitParam ? Math.min(Math.max(parseInt(limitParam, 10) || 50, 1), 500) : 50;
+
+    const alerts = await Alert.find(query).sort({ createdAt: -1 }).limit(limit).lean();
 
     return NextResponse.json({
       success: true,

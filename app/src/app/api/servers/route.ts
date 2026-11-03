@@ -6,7 +6,7 @@ import { emitSocket } from '@/lib/socket';
 export async function GET() {
   try {
     await connectDB();
-    const servers = await Server.find().sort({ createdAt: -1 });
+    const servers = await Server.find().sort({ createdAt: -1 }).lean();
 
     return NextResponse.json({
       success: true,

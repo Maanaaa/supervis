@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db';
 import { User } from '@/models/User';
-import { verifyPassword, createSessionToken, SESSION_COOKIE_NAME } from '@/lib/auth';
+import { verifyPasswordAsync, createSessionToken, SESSION_COOKIE_NAME } from '@/lib/auth';
 import { seedDefaultOperators } from '@/lib/seed';
 
 export async function POST(request: Request) {
@@ -60,7 +60,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const isMatch = verifyPassword(password, user.password);
+    const isMatch = await verifyPasswordAsync(password, user.password);
     if (!isMatch) {
       return NextResponse.json(
         { success: false, error: 'Identifiant ou mot de passe incorrect.' },
