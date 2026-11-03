@@ -5,6 +5,7 @@ import { connectDB } from '@/lib/db';
 import { Alert } from '@/models/Alert';
 import { emitSocket } from '@/lib/socket';
 import { verifySessionToken, SESSION_COOKIE_NAME } from '@/lib/session';
+import { invalidateCache } from '@/lib/cache';
 
 interface PatchAlertBody {
   action?: 'ACK' | 'TRANSFER' | 'RESOLVE';
@@ -159,6 +160,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
 
       // Diffusion instantanée à tous les techniciens connectés
       emitSocket('alert:updated', updatedAlert.toJSON());
+      invalidateCache('alerts');
 
       return NextResponse.json({
         success: true,
@@ -256,6 +258,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
       }
 
       emitSocket('alert:updated', updatedAlert.toJSON());
+      invalidateCache('alerts');
 
       return NextResponse.json({
         success: true,
@@ -302,6 +305,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
       }
 
       emitSocket('alert:updated', updatedAlert.toJSON());
+      invalidateCache('alerts');
 
       return NextResponse.json({
         success: true,

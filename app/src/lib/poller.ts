@@ -20,7 +20,7 @@ export interface HealthCheckResult {
  * Construit l'URL complète de health check pour un serveur donné.
  */
 export function buildHealthUrl(server: {
-  host: string;
+  host?: string;
   port?: number;
   healthUrl?: string;
 }): string {
@@ -31,7 +31,7 @@ export function buildHealthUrl(server: {
     return rawHealth;
   }
 
-  const rawHost = server.host.trim();
+  const rawHost = (server.host || '127.0.0.1').trim();
   const rawPort = server.port;
 
   // Si l'hôte inclut déjà un schéma (http:// ou https://)

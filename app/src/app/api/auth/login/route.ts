@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db';
 import { User } from '@/models/User';
-import { verifyPassword, createSessionToken, SESSION_COOKIE_NAME } from '@/lib/auth';
+import { verifyPasswordAsync, createSessionToken, SESSION_COOKIE_NAME } from '@/lib/auth';
 import { seedDefaultOperators } from '@/lib/seed';
 
 export async function POST(request: Request) {
@@ -36,12 +36,18 @@ export async function POST(request: Request) {
 
     const trimmed = identifier.trim();
     const escaped = trimmed.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const accentPattern = escaped
+      .replace(/[aàáâãäå]/gi, '[aàáâãäå]')
+      .replace(/[eèéêë]/gi, '[eèéêë]')
+      .replace(/[iìíîï]/gi, '[iìíîï]')
+      .replace(/[oòóôõö]/gi, '[oòóôõö]')
+      .replace(/[uùúûü]/gi, '[uùúûü]');
 
     const findOperator = () =>
       User.findOne({
         $or: [
           { email: trimmed.toLowerCase() },
-          { name: { $regex: new RegExp(`^${escaped}$`, 'i') } },
+          { name: { $regex: new RegExp(`^${accentPattern}$`, 'i') } },
         ],
       }).select('+password');
 
@@ -60,7 +66,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const isMatch = verifyPassword(password, user.password);
+    const isMatch = await verifyPasswordAsync(password, user.password);
     if (!isMatch) {
       return NextResponse.json(
         { success: false, error: 'Identifiant ou mot de passe incorrect.' },

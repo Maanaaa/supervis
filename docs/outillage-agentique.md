@@ -58,6 +58,14 @@ L'infrastructure agentique repose sur 3 mécanismes complémentaires :
   - Corps en 1 à 3 puces concrètes avec référence au ticket (`Closes #X`).
   - Économie drastique de tokens de sortie dans les rapports d'agent.
 
+### `web-security`
+- **Emplacement :** `.agents/skills/web-security/SKILL.md`
+- **Objectif :** Standardiser et auditer les règles de sécurité web (anti-BOLA/IDOR, RBAC, protection des routes chaos/simulateur, WebSocket authentifié).
+- **Règles clés :**
+  - Zéro confiance client : validation systématique de session signée HMAC (`verifySessionToken`).
+  - Rejet systématique 403 Forbidden sur toute incohérence d'assignation ou de transfert.
+  - Isolement strict et garde-fous sur les endpoints de démo et de débogage.
+
 ---
 
 ## 3. Les Hooks Déployés (`.agents/hooks.json`)

@@ -1,7 +1,7 @@
 # ADR-0010 : Simulateur de pannes et outil de validation pour démonstration (Issue #6)
 
 - **Date :** 2026-10-15
-- **Statut :** Accepté
+- **Statut :** Amendé par ADR-0012
 - **Décideurs :** Théo, Antigravity
 
 ---

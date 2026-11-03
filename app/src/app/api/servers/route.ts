@@ -2,17 +2,27 @@ import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db';
 import { Server } from '@/models/Server';
 import { emitSocket } from '@/lib/socket';
+import { getCached, setCached, invalidateCache } from '@/lib/cache';
 
 export async function GET() {
   try {
-    await connectDB();
-    const servers = await Server.find().sort({ createdAt: -1 });
+    const cacheKey = 'servers:all';
+    const cached = getCached<{ success: boolean; count: number; servers: unknown[] }>(cacheKey);
+    if (cached) {
+      return NextResponse.json(cached);
+    }
 
-    return NextResponse.json({
+    await connectDB();
+    const servers = await Server.find().sort({ createdAt: -1 }).lean();
+
+    const result = {
       success: true,
       count: servers.length,
       servers,
-    });
+    };
+    setCached(cacheKey, result, 1500);
+
+    return NextResponse.json(result);
   } catch (error: unknown) {
     console.error('[API Servers GET] Erreur :', error);
     const message = error instanceof Error ? error.message : 'Erreur interne du serveur';
@@ -76,6 +86,7 @@ export async function POST(request: Request) {
     });
 
     emitSocket('server:status_change', server.toJSON());
+    invalidateCache('servers');
 
     return NextResponse.json(
       {

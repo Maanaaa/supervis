@@ -11,6 +11,12 @@
     "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css}\" \"tests/**/*.{ts,tsx,js,jsx}\"",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css}\" \"tests/**/*.{ts,tsx,js,jsx}\"",
     "test": "jest --runInBand",
+    "test:load": "npx --yes artillery run tests/load/artillery.yml",
+    "test:load:smoke": "npx --yes artillery run tests/load/artillery-smoke.yml",
+    "test:load:50": "npx --yes artillery run --output tests/load/report-50reqs.json tests/load/artillery-50reqs.yml && node scripts/generate-report.mjs tests/load/report-50reqs.json tests/load/report-50reqs.html",
+    "test:load:stress": "npx --yes artillery run --output tests/load/stress-report.json tests/load/artillery-stress.yml",
+    "test:load:massive": "npx --yes artillery run --output tests/load/massive-report.json tests/load/artillery-massive.yml && node scripts/generate-report.mjs tests/load/massive-report.json tests/load/massive-report.html",
+    "test:load:report": "npx --yes artillery run --output tests/load/report.json tests/load/artillery.yml && node scripts/generate-report.mjs tests/load/report.json tests/load/report.html",
     "simulate": "node scripts/simulate.mjs"
   },
   "dependencies": {

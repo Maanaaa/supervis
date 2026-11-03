@@ -4,12 +4,22 @@ import { connectDB } from '@/lib/db';
 import { Alert } from '@/models/Alert';
 import { emitSocket } from '@/lib/socket';
 import { AlertSeverity } from '@/types/alert';
+import { getCached, setCached, invalidateCache } from '@/lib/cache';
 
 export async function GET(request: Request) {
   try {
-    await connectDB();
     const { searchParams } = new URL(request.url);
-    const statusParam = searchParams.get('status');
+    const statusParam = searchParams.get('status') || 'active';
+    const limitParam = searchParams.get('limit');
+    const limit = limitParam ? Math.min(Math.max(parseInt(limitParam, 10) || 50, 1), 500) : 50;
+
+    const cacheKey = `alerts:${statusParam}:${limit}`;
+    const cachedData = getCached<{ success: boolean; count: number; alerts: unknown[] }>(cacheKey);
+    if (cachedData) {
+      return NextResponse.json(cachedData);
+    }
+
+    await connectDB();
 
     let query = {};
     if (statusParam === 'all') {
@@ -25,13 +35,16 @@ export async function GET(request: Request) {
       query = { status: { $in: ['OPEN', 'ACK'] } };
     }
 
-    const alerts = await Alert.find(query).sort({ createdAt: -1 });
+    const alerts = await Alert.find(query).sort({ createdAt: -1 }).limit(limit).lean();
 
-    return NextResponse.json({
+    const result = {
       success: true,
       count: alerts.length,
       alerts,
-    });
+    };
+    setCached(cacheKey, result, 1500);
+
+    return NextResponse.json(result);
   } catch (error: unknown) {
     console.error('[API Alerts GET] Erreur :', error);
     const message = error instanceof Error ? error.message : 'Erreur interne du serveur';
@@ -112,6 +125,7 @@ export async function POST(request: Request) {
 
     // Émission instantanée via Socket.IO
     emitSocket('alert:new', alert.toJSON());
+    invalidateCache('alerts');
 
     return NextResponse.json(
       {

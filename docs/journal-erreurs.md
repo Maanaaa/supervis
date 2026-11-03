@@ -190,5 +190,139 @@ Ce document consigne l'historique exhaustif des anomalies signalées, leur diagn
   - Documentation de référence mise à jour dans l'artifact d'audit.
 - **Statut :** Résolu ✅
 
+---
+
+### [ERR-20261103-09] Blocage CPU synchrone (`scryptSync`), saturation du pool Mongoose et latence p95 dégradée sous charge (9,5% d'échecs)
+
+- **Date & Heure :** 2026-11-03 09:16:00
+- **Signalement Utilisateur :**
+  > "et fait moi un retour sur ce qui va pas, ce qui est trop lent etc"
+- **Symptôme Constaté :**
+  Sous test de stress intensif Artillery (84 req/s), la latence p95 s'est envolée à 6,56 secondes et 389 requêtes ont échoué par timeout socket (`ERR_SOCKET_TIMEOUT`, `ECONNRESET`, `EPIPE`).
+- **Analyse de Cause Racine (RCA) :**
+  1. **Blocage de l'Event Loop Node.js :** `verifyPassword` dans [`app/src/lib/auth.ts`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/app/src/lib/auth.ts) exécutait `crypto.scryptSync` sur le thread principal à chaque tentative de login. À 50 logins simultanés, le CPU figeait la boucle pendant plusieurs secondes.
+  2. **Pool de connexions sous-calibré :** `maxPoolSize` Mongoose était à 10 connexions par défaut dans `connectDB()`, forçant plus de 70 requêtes simultanées à faire la queue.
+  3. **Absence de pagination et surcharge mémoire :** `GET /api/alerts` renvoyait la collection complète sans `.limit()` ni `.lean()`, transférant plus de 67 Mo de JSON lourd.
+  4. **Coût cryptographique répété sur chaque requête :** Le middleware importait et calculait la signature HMAC SHA-256 sans cache mémoire pour chaque appel d'un même opérateur.
+- **Correctifs Appliqués :**
+  - **`scryptAsync` déporté :** Implémentation de `verifyPasswordAsync` utilisant `util.promisify(crypto.scrypt)` dans le thread pool libuv.
+  - **Cache In-Memory TTL & Invalidation :** Création de [`app/src/lib/cache.ts`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/app/src/lib/cache.ts) pour `/api/alerts` et `/api/servers` avec invalidation immédiate sur chaque écriture (`POST`, `PATCH`, `DELETE`).
+  - **Fast-path session :** Mise en cache mémoire des sessions validées (`tokenCache`) dans [`app/src/lib/session.ts`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/app/src/lib/session.ts).
+  - **Dimensionnement Mongoose :** `maxPoolSize: 100`, `minPoolSize: 10`, et utilisation de `.lean().limit(50)`.
+- **Règles & Prévention :**
+  - Consignation dans l'ADR-0011.
+  - Interdiction d'opérations cryptographiques CPU-bloquantes synchrones sur le thread HTTP principal.
+- **Statut :** Résolu ✅ (Latence p95 passée de 6 569 ms à 44 ms, 0 erreur).
+
+---
+
+### [ERR-20261103-10] Arrêt inattendu du serveur HTTP sous saturation de connexions (`EPIPE` non intercepté)
+
+- **Date & Heure :** 2026-11-03 09:14:00
+- **Signalement Utilisateur :**
+  > "Encore plus gros stp" (Le serveur s'est arrêté lors de la montée à 80 VU/s)
+- **Symptôme Constaté :**
+  Le processus `node server.js` s'est interrompu brutalement lors d'un pic de charge soutenu, entraînant des erreurs `ECONNREFUSED` sur le banc de charge.
+- **Analyse de Cause Racine (RCA) :**
+  1. **Absence d'intercepteur d'erreur :** L'instance `http.createServer` dans [`app/server.js`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/app/server.js) ne disposait d'aucun écouteur `server.on('error', ...)`. Une fermeture de socket abrupte côté client émettait une exception non interceptée faisant planter le runtime.
+  2. **File d'attente système limitée :** Le backlog d'écoute TCP utilisait la valeur par défaut du système (511), rejetant les connexions en rafale au-delà du seuil.
+- **Correctifs Appliqués :**
+  - Ajout de l'écouteur `server.on('error', (err) => console.error('> Erreur serveur HTTP :', err.message))`.
+  - Configuration de `server.keepAliveTimeout = 65000`, `server.headersTimeout = 66000`, `server.maxConnections = 65535` et backlog socket à `2048` dans `server.listen`.
+- **Règles & Prévention :**
+  - Obligation d'intercepter les erreurs d'infrastructures sockets dans le serveur HTTP central.
+- **Statut :** Résolu ✅.
+
+---
+
+### [ERR-20261103-11] Rejet 401 Unauthorized à la connexion sur saisie sans accent ("theo") suite au matching strict de l'identifiant
+
+- **Date & Heure :** 2026-11-03 14:21:00
+- **Signalement Utilisateur :**
+  > "Pourquoi est-ce que je ne peux plus me connecter"
+- **Symptôme Constaté :**
+  L'utilisateur essayait de se connecter avec l'identifiant `theo` et le mot de passe valide `admin` sur `/login`, mais recevait le message d'erreur `Identifiant ou mot de passe incorrect (401 Unauthorized)`.
+- **Analyse de Cause Racine (RCA) :**
+  1. **Sensibilité diacritique du matching MongoDB :** Le compte opérateur par défaut est amorcé avec le nom `Théo` (accent aigu).
+  2. **Regex sensible aux accents :** Dans [`app/src/app/api/auth/login/route.ts`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/app/src/app/api/auth/login/route.ts), la recherche utilisait `new RegExp(`^${escaped}$`, 'i')`. Le flag `i` gère uniquement les majuscules/minuscules, mais ne fait pas correspondre `e` avec `é`, provoquant l'absence d'opérateur trouvé et le rejet 401.
+- **Correctifs Appliqués :**
+  - **Normalisation diacritique :** Remplacement des voyelles dans la Regex par leur classe équivalente (`[eèéêë]`, `[aàáâãäå]`, etc.) dans `route.ts`.
+  - Connexion désormais acceptée indifféremment pour `theo`, `théo`, `Theo` ou `Théo`.
+- **Règles & Prévention :**
+  - Tout champ d'identification nominatif en français doit être traité avec tolérance aux accents.
+- **Statut :** Résolu ✅.
+
+---
+
+### [ERR-20261103-12] Exception TypeError dans `buildHealthUrl` du poller (`Cannot read properties of undefined (reading 'trim')`)
+
+- **Date & Heure :** 2026-11-03 14:22:00
+- **Signalement Utilisateur :**
+  Détecté dans les logs du serveur de développement.
+- **Symptôme Constaté :**
+  Erreur `[Poller] Erreur inattendue : TypeError: Cannot read properties of undefined (reading 'trim')` au niveau de `buildHealthUrl`.
+- **Analyse de Cause Racine (RCA) :**
+  Certains serveurs mockés ou créés lors de tests ne renseignaient pas le champ `host` ou utilisaient `ip`. L'appel direct `server.host.trim()` sans valeur de repli levait une exception non gérée.
+- **Correctifs Appliqués :**
+  Sécurisation défensive de `buildHealthUrl` dans [`app/src/lib/poller.ts`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/app/src/lib/poller.ts#L22) : `const rawHost = (server.host || '127.0.0.1').trim()`.
+- **Règles & Prévention :**
+  - Règle de programmation défensive sur tous les champs d'objets externes ou issus de la base.
+- **Statut :** Résolu ✅.
+
+---
+
+### [ERR-20261103-13] Désynchronisation des assets Next.js (404 CSS/JS) suite à une exécution concurrente de `next build` avec le serveur dev
+
+- **Date & Heure :** 2026-11-03 14:35:00
+- **Signalement Utilisateur :**
+  > "heu" (Capture d'écran montrant le dashboard avec fond blanc, aucun style CSS chargé et badge "RECONNEXION...")
+- **Symptôme Constaté :**
+  Tous les liens d'actifs statiques (`/_next/static/css/app/layout.css?v=...`, `/_next/static/chunks/app/layout.js`, etc.) retournaient des codes HTTP `404 Not Found`. L'interface s'affichait brute (HTML natif sans thème Tailwind sombre) et le client Socket.IO ne s'initialisait pas (badge bloqué sur l'état SSR "RECONNEXION...").
+- **Analyse de Cause Racine (RCA) :**
+  Une commande de build (`next build`) a été exécutée en tâche de fond dans le répertoire `app/` pendant qu'une instance de développement (`next dev` via `server.js`) tournait en parallèle. Le compilateur Next.js a purgé et remplacé les fichiers dev de `.next/` par des bundles hachés de production. Le serveur dev en mémoire continuait de servir les balises HTML dev qui n'existaient plus sur le disque.
+- **Correctifs Appliqués :**
+  - Arrêt du processus dev serveur.
+  - Purge propre du répertoire de build : `rm -rf app/.next`.
+  - Redémarrage du serveur dev (`npm run dev`).
+  - Validation du retour HTTP 200 sur les endpoints CSS et JS chunks.
+- **Règles & Prévention :**
+  - Ne jamais exécuter `next build` dans le même dossier de travail pendant qu'un serveur `next dev` écoute.
+- **Statut :** Résolu ✅.
 
 
+---
+
+### [ERR-20261103-14] Serveur "srv-database-01" absent de la liste des serveurs lors des alertes disque du simulateur
+
+- **Date & Heure :** 2026-11-03 14:45:00
+- **Signalement Utilisateur :**
+  > ""🖥️ srv-database-01" dans les erreurs ok. Mais dans la liste des serveurs je ne l'ai pas quoi"
+- **Symptôme Constaté :**
+  Lorsqu'une alerte "Panne Disque saturé" était simulée, l'alerte apparaissait bien dans les incidents sous le nom `srv-database-01`, mais ce serveur était absent de l'onglet "Parc Serveurs" et son champ `serverId` était `undefined`.
+- **Analyse de Cause Racine (RCA) :**
+  1. **Divergence de nommage dans les seeds :** [`app/server.js`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/app/server.js) initialisait la base de données avec le serveur nommé `db-primary-sql`, tandis que le simulateur dans [`app/src/app/api/simulator/trigger/route.ts`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/app/src/app/api/simulator/trigger/route.ts) utilisait `srv-database-01` en valeur par défaut sans vérifier son existence préalable dans la collection `servers`.
+  2. **Absence de création automatique de repli :** Contrairement à la simulation `server_down` qui créait automatiquement le serveur si manquant, les actions `cpu`, `disk` et `nginx` créaient uniquement l'alerte avec un `serverId` vide si aucun serveur ne correspondait.
+- **Correctifs Appliqués :**
+  - **Mise à jour des seeds serveur :** Remplacement de `db-primary-sql` par `srv-database-01` dans `server.js` avec tous les champs requis (`host: '192.168.1.20'`, `port: 5432`, `healthUrl: '/health'`, `status: 'UP'`).
+  - **Auto-provisioning et liaison stricte :** Dans `route.ts`, si un serveur cible (`srv-database-01`, `web-prod-01`, etc.) n'existe pas lors du déclenchement d'une simulation (`cpu`, `disk`, `nginx`), il est automatiquement créé en base, indexé dans le cache et synchronisé en temps réel via Socket.IO (`server:created`). L'alerte est systématiquement liée à son `_id`.
+- **Règles & Prévention :**
+  - Toute entité d'alerte simulée doit être liée à une ressource existante et consultable dans le parc de serveurs.
+- **Statut :** Résolu ✅.
+
+
+---
+
+### [ERR-20261103-15] Erreur d'hydratation React (`Text content did not match server-rendered HTML`) sur les timestamps relatifs
+
+- **Date & Heure :** 2026-11-03 14:55:00
+- **Signalement Utilisateur :**
+  > "Unhandled Runtime Error: Error: Text content does not match server-rendered HTML. Text content did not match. Server: "il y a 58s" Client: "il y a 59s""
+- **Symptôme Constaté :**
+  L'application affichait une erreur d'hydratation Next.js dans la console et overlay développeur lors du chargement de la liste d'alertes ([`AlertCard`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/app/src/components/alerts/AlertCard.tsx)).
+- **Analyse de Cause Racine (RCA) :**
+  `formatRelativeTime(date)` calcule l'écart avec `new Date()` (`Date.now()`). L'exécution SSR côté serveur s'effectue quelques dizaines ou centaines de millisecondes avant la phase d'hydratation côté client dans le navigateur. Lorsque l'écart franchit la seconde frontière (ex: 58s côté serveur vs 59s côté client), l'arbre React DOM ne correspond pas strictement au HTML SSR initial, déclenchant l'incohérence d'hydratation React 18/19.
+- **Correctifs Appliqués :**
+  - Ajout de l'attribut `suppressHydrationWarning={true}` sur les éléments de rendu des timestamps dynamiques dans [`AlertCard.tsx`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/app/src/components/alerts/AlertCard.tsx), [`ServerCard.tsx`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/app/src/components/servers/ServerCard.tsx), [`HistoryList.tsx`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/app/src/components/alerts/HistoryList.tsx) et [`app/servers/[id]/page.tsx`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/app/src/app/servers/[id]/page.tsx).
+- **Règles & Prévention :**
+  - Tout affichage temporel relatif ou dynamique calculé côté client doit porter `suppressHydrationWarning` ou être initialisé après le montage client.
+- **Statut :** Résolu ✅.
