@@ -223,6 +223,12 @@ setupDatabase().then(() => {
     handle(req, res, parsedUrl);
   });
 
+  server.on('error', (err) => {
+    console.error('> Erreur serveur HTTP :', err.message);
+  });
+  server.keepAliveTimeout = 65000;
+  server.headersTimeout = 66000;
+
   const io = new SocketIOServer(server, {
     cors: {
       origin: '*',

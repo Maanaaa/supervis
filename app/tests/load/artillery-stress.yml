@@ -1,0 +1,66 @@
+config:
+  target: "http://localhost:3000"
+  phases:
+    - duration: 10
+      arrivalRate: 10
+      name: "Phase 1 - Échauffement soutenu (10 VU/s)"
+    - duration: 15
+      arrivalRate: 15
+      rampTo: 45
+      name: "Phase 2 - Rampe agressive (15 -> 45 VU/s)"
+    - duration: 15
+      arrivalRate: 50
+      name: "Phase 3 - Stress maximal soutenu (50 VU/s)"
+  defaults:
+    headers:
+      User-Agent: "Artillery-StressTest/2.0"
+      Content-Type: "application/json"
+
+scenarios:
+  - name: "Navigation Dashboard & Lecture MongoDB"
+    weight: 60
+    flow:
+      - get:
+          url: "/api/health"
+      - post:
+          url: "/api/auth/login"
+          json:
+            identifier: "theo@supervis.local"
+            password: "admin"
+      - get:
+          url: "/api/servers"
+      - get:
+          url: "/api/alerts"
+      - get:
+          url: "/api/alerts?status=OPEN"
+
+  - name: "Ingestion Massive Alertes & Écriture MongoDB"
+    weight: 30
+    flow:
+      - post:
+          url: "/api/auth/login"
+          json:
+            identifier: "theo@supervis.local"
+            password: "admin"
+      - post:
+          url: "/api/alerts"
+          json:
+            serverName: "srv-heavy-stress"
+            title: "Alerte de charge extrême"
+            message: "Test de saturation maximal Artillery sur MongoDB"
+            severity: "CRITICAL"
+            metric: "CPU"
+            value: 99
+      - get:
+          url: "/api/alerts?status=OPEN"
+
+  - name: "Authentification Rapide"
+    weight: 10
+    flow:
+      - post:
+          url: "/api/auth/login"
+          json:
+            identifier: "theo@supervis.local"
+            password: "admin"
+      - get:
+          url: "/api/auth/me"

@@ -44,4 +44,5 @@ app/.env*.local
 
 # Load testing reports
 app/tests/load/report.json
+app/tests/load/stress-report.json
 app/tests/load/*.html
