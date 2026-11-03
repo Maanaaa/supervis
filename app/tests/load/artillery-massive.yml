@@ -1,0 +1,67 @@
+config:
+  target: "http://localhost:3000"
+  phases:
+    - duration: 10
+      arrivalRate: 25
+      name: "Phase 1 - Trafic soutenu (25 VU/s)"
+    - duration: 15
+      arrivalRate: 50
+      rampTo: 120
+      name: "Phase 2 - Montée en pic géant (50 -> 120 VU/s)"
+    - duration: 15
+      arrivalRate: 150
+      name: "Phase 3 - Trafic hyper-saturation (150 VU/s)"
+  defaults:
+    headers:
+      User-Agent: "Artillery-MassiveScale/2.0"
+      Content-Type: "application/json"
+
+scenarios:
+  - name: "Navigation Dashboard & Lecture MongoDB"
+    weight: 65
+    flow:
+      - get:
+          url: "/api/health"
+      - post:
+          url: "/api/auth/login"
+          json:
+            identifier: "theo@supervis.local"
+            password: "admin"
+      - get:
+          url: "/api/servers"
+      - get:
+          url: "/api/alerts"
+      - get:
+          url: "/api/alerts?status=OPEN"
+
+  - name: "Ingestion Alertes Haute Fréquence"
+    weight: 25
+    flow:
+      - post:
+          url: "/api/auth/login"
+          json:
+            identifier: "theo@supervis.local"
+            password: "admin"
+      - post:
+          url: "/api/alerts"
+          json:
+            serverName: "srv-massive-traffic"
+            title: "Pic de trafic massif détecté"
+            message: "Simulation flux géant d'alertes en temps réel"
+            severity: "CRITICAL"
+            metric: "CPU"
+            value: 99
+      - get:
+          url: "/api/alerts?status=OPEN"
+
+  - name: "Connexions Opérateurs Simultanées"
+    weight: 10
+    flow:
+      - post:
+          url: "/api/auth/login"
+          json:
+            identifier: "theo@supervis.local"
+            password: "admin"
+      - get:
+          url: "/api/auth/me"
+
