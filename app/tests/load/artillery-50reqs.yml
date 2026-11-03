@@ -1,0 +1,61 @@
+config:
+  target: "http://localhost:3000"
+  phases:
+    - duration: 5
+      arrivalRate: 5
+      name: "Phase 1 - Échauffement"
+    - duration: 30
+      arrivalRate: 12
+      name: "Phase 2 - Régime établi à 50 req/s"
+  defaults:
+    headers:
+      User-Agent: "Artillery-50ReqPerSec/2.0"
+      Content-Type: "application/json"
+
+scenarios:
+  - name: "Navigation Dashboard & Lecture MongoDB"
+    weight: 65
+    flow:
+      - get:
+          url: "/api/health"
+      - post:
+          url: "/api/auth/login"
+          json:
+            identifier: "theo@supervis.local"
+            password: "admin"
+      - get:
+          url: "/api/servers"
+      - get:
+          url: "/api/alerts"
+
+  - name: "Ingestion Alertes MongoDB"
+    weight: 25
+    flow:
+      - post:
+          url: "/api/auth/login"
+          json:
+            identifier: "theo@supervis.local"
+            password: "admin"
+      - post:
+          url: "/api/alerts"
+          json:
+            serverName: "srv-steady-50"
+            title: "Alerte régime 50 req/s"
+            message: "Test continu à charge nominale"
+            severity: "WARNING"
+            metric: "CPU"
+            value: 75
+      - get:
+          url: "/api/alerts?status=OPEN"
+
+  - name: "Session Opérateur"
+    weight: 10
+    flow:
+      - post:
+          url: "/api/auth/login"
+          json:
+            identifier: "theo@supervis.local"
+            password: "admin"
+      - get:
+          url: "/api/auth/me"
+
