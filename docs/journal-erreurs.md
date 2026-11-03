@@ -308,3 +308,21 @@ Ce document consigne l'historique exhaustif des anomalies signalées, leur diagn
 - **Règles & Prévention :**
   - Toute entité d'alerte simulée doit être liée à une ressource existante et consultable dans le parc de serveurs.
 - **Statut :** Résolu ✅.
+
+
+---
+
+### [ERR-20261103-15] Erreur d'hydratation React (`Text content did not match server-rendered HTML`) sur les timestamps relatifs
+
+- **Date & Heure :** 2026-11-03 14:55:00
+- **Signalement Utilisateur :**
+  > "Unhandled Runtime Error: Error: Text content does not match server-rendered HTML. Text content did not match. Server: "il y a 58s" Client: "il y a 59s""
+- **Symptôme Constaté :**
+  L'application affichait une erreur d'hydratation Next.js dans la console et overlay développeur lors du chargement de la liste d'alertes ([`AlertCard`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/app/src/components/alerts/AlertCard.tsx)).
+- **Analyse de Cause Racine (RCA) :**
+  `formatRelativeTime(date)` calcule l'écart avec `new Date()` (`Date.now()`). L'exécution SSR côté serveur s'effectue quelques dizaines ou centaines de millisecondes avant la phase d'hydratation côté client dans le navigateur. Lorsque l'écart franchit la seconde frontière (ex: 58s côté serveur vs 59s côté client), l'arbre React DOM ne correspond pas strictement au HTML SSR initial, déclenchant l'incohérence d'hydratation React 18/19.
+- **Correctifs Appliqués :**
+  - Ajout de l'attribut `suppressHydrationWarning={true}` sur les éléments de rendu des timestamps dynamiques dans [`AlertCard.tsx`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/app/src/components/alerts/AlertCard.tsx), [`ServerCard.tsx`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/app/src/components/servers/ServerCard.tsx), [`HistoryList.tsx`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/app/src/components/alerts/HistoryList.tsx) et [`app/servers/[id]/page.tsx`](file:///Users/theo/Documents/IUT/Developpement/S5/SAE5.DWeb-DI.3_Developpement-et-IA/app/src/app/servers/[id]/page.tsx).
+- **Règles & Prévention :**
+  - Tout affichage temporel relatif ou dynamique calculé côté client doit porter `suppressHydrationWarning` ou être initialisé après le montage client.
+- **Statut :** Résolu ✅.

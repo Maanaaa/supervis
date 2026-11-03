@@ -240,8 +240,8 @@ export function HistoryList({ initialAlerts }: HistoryListProps) {
                     marginTop: '0.75rem',
                   }}
                 >
-                  <span>Début : {formatDateTime(alert.createdAt)}</span>
-                  <span>Clôture : {formatDateTime(alert.resolvedAt)}</span>
+                  <span suppressHydrationWarning>Début : {formatDateTime(alert.createdAt)}</span>
+                  <span suppressHydrationWarning>Clôture : {formatDateTime(alert.resolvedAt)}</span>
                   {alert.transferredFrom && alert.transferredFrom.length > 0 && (
                     <span>Chaîne de transfert : {alert.transferredFrom.join(' ➔ ')}</span>
                   )}

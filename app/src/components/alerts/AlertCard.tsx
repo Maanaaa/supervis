@@ -189,7 +189,7 @@ export function AlertCard({
             color: 'var(--text-muted)',
           }}
         >
-          <span>🕒 {formatRelativeTime(alert.createdAt)}</span>
+          <span suppressHydrationWarning>🕒 {formatRelativeTime(alert.createdAt)}</span>
           {alert.status === 'ACK' && (
             <span
               className="badge"
