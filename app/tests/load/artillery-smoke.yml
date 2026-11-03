@@ -1,0 +1,20 @@
+config:
+  target: "{{ $processEnvironment.TARGET_URL || 'http://localhost:3000' }}"
+  phases:
+    - duration: 2
+      arrivalRate: 1
+      name: "Smoke Test (Vérification rapide)"
+  defaults:
+    headers:
+      User-Agent: "Artillery-SmokeTest/2.0"
+      Content-Type: "application/json"
+
+scenarios:
+  - name: "Smoke check routes & DB"
+    flow:
+      - get:
+          url: "/api/health"
+      - get:
+          url: "/api/servers"
+      - get:
+          url: "/api/alerts"

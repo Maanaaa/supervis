@@ -1,0 +1,59 @@
+config:
+  target: "{{ $processEnvironment.TARGET_URL || 'http://localhost:3000' }}"
+  phases:
+    - duration: 5
+      arrivalRate: 2
+      name: "Phase 1 - Échauffement (Warm-up)"
+    - duration: 10
+      arrivalRate: 5
+      rampTo: 15
+      name: "Phase 2 - Montée en charge progressive (Ramp-up)"
+    - duration: 10
+      arrivalRate: 15
+      name: "Phase 3 - Charge soutenue (Peak load)"
+  defaults:
+    headers:
+      User-Agent: "Artillery-LoadTest/2.0"
+      Content-Type: "application/json"
+
+scenarios:
+  - name: "Navigation Dashboard & Lecture MongoDB"
+    weight: 60
+    flow:
+      - get:
+          url: "/api/health"
+      - think: 1
+      - get:
+          url: "/api/servers"
+      - get:
+          url: "/api/alerts"
+      - get:
+          url: "/api/alerts?status=OPEN"
+
+  - name: "Ingestion Alertes & Écriture MongoDB"
+    weight: 30
+    flow:
+      - post:
+          url: "/api/alerts"
+          json:
+            serverName: "srv-artillery-test"
+            title: "Alerte de charge générée"
+            message: "Test de charge Artillery sous haute sollicitation"
+            severity: "WARNING"
+            metric: "CPU"
+            value: 85
+      - think: 1
+      - get:
+          url: "/api/alerts?status=OPEN"
+
+  - name: "Authentification Opérateur & Session"
+    weight: 10
+    flow:
+      - post:
+          url: "/api/auth/login"
+          json:
+            identifier: "theo@supervis.local"
+            password: "admin"
+      - think: 1
+      - get:
+          url: "/api/auth/me"

@@ -11,6 +11,9 @@
     "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css}\" \"tests/**/*.{ts,tsx,js,jsx}\"",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css}\" \"tests/**/*.{ts,tsx,js,jsx}\"",
     "test": "jest --runInBand",
+    "test:load": "npx --yes artillery run tests/load/artillery.yml",
+    "test:load:smoke": "npx --yes artillery run tests/load/artillery-smoke.yml",
+    "test:load:report": "npx --yes artillery run --output tests/load/report.json tests/load/artillery.yml && npx --yes artillery report tests/load/report.json",
     "simulate": "node scripts/simulate.mjs"
   },
   "dependencies": {

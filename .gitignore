@@ -41,3 +41,7 @@ app/.env*.local
 
 # Antigravity temporary directories
 .system_generated/
+
+# Load testing reports
+app/tests/load/report.json
+app/tests/load/*.html
