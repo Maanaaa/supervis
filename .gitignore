@@ -47,4 +47,5 @@ app/tests/load/report.json
 app/tests/load/report-50reqs.json
 app/tests/load/stress-report.json
 app/tests/load/massive-report.json
+app/tests/load/*-ultra-fast.json
 app/tests/load/*.html

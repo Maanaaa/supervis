@@ -56,6 +56,7 @@ const ServerSchema = new Schema<IServerDocument>(
 
 // Index composé pour requêter rapidement les serveurs à sonder par date
 ServerSchema.index({ status: 1, lastCheckAt: 1 });
+ServerSchema.index({ createdAt: -1 });
 
 export const Server: Model<IServerDocument> =
   models.Server || model<IServerDocument>('Server', ServerSchema);

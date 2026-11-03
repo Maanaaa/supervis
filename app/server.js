@@ -228,6 +228,8 @@ setupDatabase().then(() => {
   });
   server.keepAliveTimeout = 65000;
   server.headersTimeout = 66000;
+  server.maxConnections = 65535;
+  server.requestTimeout = 30000;
 
   const io = new SocketIOServer(server, {
     cors: {
@@ -247,7 +249,7 @@ setupDatabase().then(() => {
     });
   });
 
-  server.listen(port, () => {
+  server.listen(port, hostname, 2048, () => {
     console.log(`> Serveur de supervision prêt sur http://${hostname}:${port}`);
     console.log(`> Environnement : ${dev ? 'Développement' : 'Production'}`);
 

@@ -6,6 +6,7 @@ import { Server } from '@/models/Server';
 import { Alert } from '@/models/Alert';
 import { emitSocket } from '@/lib/socket';
 import { verifySessionToken, SESSION_COOKIE_NAME } from '@/lib/session';
+import { invalidateCache } from '@/lib/cache';
 
 async function getAuthenticatedUser(request: Request) {
   let token: string | undefined;
@@ -89,6 +90,7 @@ export async function DELETE(_request: Request, { params }: { params: { id: stri
     }
 
     emitSocket('server:deleted', { serverId: id });
+    invalidateCache('servers');
 
     return NextResponse.json({
       success: true,
