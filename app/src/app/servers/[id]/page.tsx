@@ -160,7 +160,10 @@ export default async function ServerDetailPage({ params }: { params: { id: strin
             <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
               Dernier contrôle
             </span>
-            <div suppressHydrationWarning style={{ fontSize: '0.95rem', color: 'var(--text-secondary)' }}>
+            <div
+              suppressHydrationWarning
+              style={{ fontSize: '0.95rem', color: 'var(--text-secondary)' }}
+            >
               {formatRelativeTime(server.lastCheckAt)}
             </div>
           </div>
@@ -227,7 +230,10 @@ export default async function ServerDetailPage({ params }: { params: { id: strin
                     </span>
                   </div>
 
-                  <span suppressHydrationWarning style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                  <span
+                    suppressHydrationWarning
+                    style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}
+                  >
                     {formatDateTime(alert.createdAt)}
                   </span>
                 </div>

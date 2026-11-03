@@ -130,7 +130,9 @@ export function ServerCard({ server, onDeleted }: ServerCardProps) {
               {server.latencyMs !== undefined ? `${server.latencyMs} ms` : '—'}
             </strong>
           </span>
-          <span suppressHydrationWarning>Dernier check : {formatRelativeTime(server.lastCheckAt)}</span>
+          <span suppressHydrationWarning>
+            Dernier check : {formatRelativeTime(server.lastCheckAt)}
+          </span>
         </div>
 
         <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'space-between' }}>

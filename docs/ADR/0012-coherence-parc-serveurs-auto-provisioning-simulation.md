@@ -32,3 +32,4 @@ Le simulateur de pannes (introduit par l'ADR-0010) permettait de déclencher des
   - Expérience démonstration fluide sans anomalie visuelle en soutenance.
 - **Compromis :**
   - Les serveurs auto-provisionnés pour la démo sont persistés en base tant qu'un `reset` ou un nettoyage de base n'est pas déclenché.
+
