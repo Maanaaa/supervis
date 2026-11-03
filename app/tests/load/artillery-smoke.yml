@@ -1,5 +1,5 @@
 config:
-  target: "{{ $processEnvironment.TARGET_URL || 'http://localhost:3000' }}"
+  target: "http://localhost:3000"
   phases:
     - duration: 2
       arrivalRate: 1
@@ -14,6 +14,11 @@ scenarios:
     flow:
       - get:
           url: "/api/health"
+      - post:
+          url: "/api/auth/login"
+          json:
+            identifier: "theo@supervis.local"
+            password: "admin"
       - get:
           url: "/api/servers"
       - get:

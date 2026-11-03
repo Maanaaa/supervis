@@ -35,3 +35,4 @@ Vous pouvez surcharger l'URL cible via la variable d'environnement `TARGET_URL` 
 ```bash
 TARGET_URL=http://staging.supervis.local:3000 npm run test:load
 ```
+
