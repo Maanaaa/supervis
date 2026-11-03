@@ -77,7 +77,17 @@ const html = `<!DOCTYPE html>
     th { color: var(--muted); font-size: 0.85rem; text-transform: uppercase; }
     .badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.8rem; font-weight: 600; }
     .badge-success { background: rgba(74, 222, 128, 0.2); color: var(--green); }
+    .badge-warning { background: rgba(251, 191, 36, 0.2); color: var(--amber); }
     .badge-error { background: rgba(248, 113, 113, 0.2); color: var(--red); }
+    .analysis-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; margin-top: 1rem; }
+    .analysis-box { background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border); border-radius: 6px; padding: 1rem; }
+    .analysis-box h3 { font-size: 0.95rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem; }
+    .analysis-box ul { list-style: none; padding-left: 0; }
+    .analysis-box li { font-size: 0.88rem; color: #cbd5e1; margin-bottom: 0.5rem; line-height: 1.4; position: relative; padding-left: 1.2rem; }
+    .analysis-box li::before { content: "•"; position: absolute; left: 0; color: var(--accent); font-weight: bold; }
+    .analysis-box.bad h3 { color: var(--red); }
+    .analysis-box.bottleneck h3 { color: var(--amber); }
+    .analysis-box.remedy h3 { color: var(--green); }
     footer { text-align: center; color: var(--muted); font-size: 0.85rem; margin-top: 2rem; }
   </style>
 </head>
@@ -201,6 +211,39 @@ const html = `<!DOCTYPE html>
           }
         </tbody>
       </table>
+    </div>
+
+    <div class="section">
+      <h2>🔍 Diagnostic Approfondi : Goulots d'Étranglement & Axes d'Amélioration</h2>
+      <div class="analysis-grid">
+        <div class="analysis-box bad">
+          <h3>⚠️ Ce qui fonctionne mal sous saturation</h3>
+          <ul>
+            <li><strong>Surcharge au-delà de 220 req/s :</strong> La file d'attente système des sockets réseau déborde sous l'afflux brutal de connexions concurrentes, provoquant des <em>ERR_SOCKET_TIMEOUT</em>.</li>
+            <li><strong>Empilement des requêtes (Queueing) :</strong> Lorsque l'unique boucle d'événements est sollicitée à 100%, les requêtes s'accumulent en mémoire, faisant dériver la latence p95 au-delà des seuils acceptables.</li>
+            <li><strong>Sensibilité des sessions :</strong> La vérification cryptographique des cookies de session (HMAC/SHA256) sur chaque requête protégée consomme des cycles CPU précieux lors de floods massifs.</li>
+          </ul>
+        </div>
+
+        <div class="analysis-box bottleneck">
+          <h3>🛑 Goulots d'Étranglement Identifiés</h3>
+          <ul>
+            <li><strong>Processus Node.js mono-cœur :</strong> L'instance unique ne peut exploiter qu'un seul cœur CPU, limitant mécaniquement le débit de traitement à ~250 req/s.</li>
+            <li><strong>Accès direct MongoDB sans couche cache :</strong> Bien que Mongoose soit configuré avec <em>maxPoolSize: 50</em> et <em>.lean()</em>, chaque appel HTTP interroge directement la base de données.</li>
+            <li><strong>Descripteurs de sockets OS (uLimit) :</strong> Le nombre de descripteurs de fichiers TCP concurrents alloués par défaut par le système d'exploitation bride les connexions HTTP entrantes en rafale.</li>
+          </ul>
+        </div>
+
+        <div class="analysis-box remedy">
+          <h3>🚀 Recommandations pour l'Échelle "Grande Plateforme"</h3>
+          <ul>
+            <li><strong>Cache mémoire distribué (Redis / Dragonfly) :</strong> Placer un cache avec TTL court (5 à 10s) en amont de <em>/api/alerts</em> et <em>/api/servers</em> pour absorber 90% du trafic en &lt; 1 ms.</li>
+            <li><strong>Clustering horizontal (PM2 / Pods Kubernetes) :</strong> Lancer un cluster multi-instances (ex: 8 à 16 workers) derrière un Reverse Proxy Nginx ou un Ingress Controller pour multiplier le débit par le nombre de cœurs.</li>
+            <li><strong>MongoDB Replica Sets (Lecture déportée) :</strong> Configurer <em>readPreference: secondaryPreferred</em> pour router les requêtes de consultation vers des nœuds secondaires dédiés à la lecture.</li>
+            <li><strong>Rate Limiting & Protection DDoS en bordure :</strong> Filtrer les abus et lisser les pics d'inondation en périphérie (Cloudflare / middleware de token-bucket).</li>
+          </ul>
+        </div>
+      </div>
     </div>
 
     <footer>
